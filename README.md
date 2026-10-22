@@ -122,7 +122,7 @@ Flags: `--json` (full result), `--reset-memory`, `--memory PATH`, `--max-cost US
 
 ## Example output (live: Zetaris + Claude, real data)
 
-One recorded run (`run-fdb61cc2`, 2026-10-22). Full transcript:
+One recorded run (`run-b5402d4e`, 2026-10-22). Full transcript:
 [`examples/run5_live_zetaris_claude.txt`](examples/run5_live_zetaris_claude.txt).
 
 ```
@@ -131,8 +131,10 @@ Why: H_holiday (confidence 0.95). MLK Day (2025-01-20) had 16,783 fewer trips th
 (100% of the gross loss); the other six days were +6,032 combined.
 Ruled out: weather, data gap, price, Manhattan-only (other boroughs +8.5%).
 Verifier re-derived both totals from raw rows: match.
-20 Zetaris queries, 3 Claude calls, 29.6 s, $0.053.
+20 Zetaris queries, 3 Claude calls, 34.3 s, $0.057.
 ```
+
+The same transcript shows a question outside the data range returning `NoDataError` with the available range.
 
 ## Example output (sample mode)
 
@@ -149,7 +151,7 @@ Ruled out: H_price, H_data_gap, H_local ...
 ```
 
 Sample inputs and full outputs in [`examples/`](examples/): cold memory, warm memory, a different borough and
-direction (Brooklyn, rise), and a live-Claude run on sample data.
+direction (Brooklyn, rise), a live-Claude run on sample data, and a live Zetaris + Claude run on real data.
 
 ## Data
 
