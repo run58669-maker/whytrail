@@ -9,7 +9,7 @@ from whytrail.generator import MockGenerator, parse_json
 from whytrail.meterless.hmem import Memory, MemoryRetrieval, MemoryStore
 from whytrail.meterless.world_model import IngestPipeline, WorldStore
 from whytrail.orchestrator import WhyTrail, parse_question
-from whytrail.zetaris import MockZetaris, ZetarisRestClient
+from whytrail.zetaris import MockZetaris, ZetarisError, ZetarisRestClient
 
 QUESTION = "Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"
 
@@ -135,6 +135,33 @@ def test_rest_client_request_shape():
     assert seen["headers"]["authorization"] == "Bearer k" and seen["headers"]["x-org-id"] == "1"
     assert seen["body"]["sql"] == "SELECT 1" and seen["body"]["source"] == "SqlEditor"
 
+
+
+def test_rest_client_retry_uses_fresh_query_id_and_keeps_real_error():
+    ids = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        if body["queryId"] in ids:
+            return httpx.Response(400, json={"msg": "Query id already exists"})
+        ids.append(body["queryId"])
+        return httpx.Response(400, json={"msg": "Table or view not found: NY_TAXI.taxi_daily"})
+
+    c = ZetarisRestClient("http://zt:8888/api/v1.0", api_key="k", org_id="1", retries=1,
+                          transport=httpx.MockTransport(handler))
+    with pytest.raises(ZetarisError) as e:
+        c.query("SELECT 1")
+    assert len(ids) == 2 and ids[0] != ids[1]
+    assert "Table or view not found" in str(e.value) and "already exists" not in str(e.value)
+
+
+def test_rest_client_reads_columns_from_headers():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"headers": ["trip_date", "trips"], "data": [["2025-01-13", "1"]],
+                                         "total": 1, "timeUsed": 5})
+
+    c = ZetarisRestClient("http://zt:8888/api/v1.0", api_key="k", org_id="1", transport=httpx.MockTransport(handler))
+    assert c.query("SELECT trip_date, trips FROM NY_TAXI.taxi_daily").columns == ["trip_date", "trips"]
 
 def test_api_run_sample_mode(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)

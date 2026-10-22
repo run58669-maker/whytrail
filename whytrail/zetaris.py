@@ -69,6 +69,17 @@ def to_number(value: Any) -> float | None:
         return None
 
 
+def _error_text(resp: httpx.Response, limit: int = 500) -> str:
+    """Zetaris errors arrive as {"msg": "..."}; return that message, else the raw body."""
+    try:
+        out = resp.json()
+        if isinstance(out, dict) and out.get("msg"):
+            return str(out["msg"])[:limit]
+    except ValueError:
+        pass
+    return resp.text[:limit]
+
+
 class ZetarisRestClient:
     name = "zetaris-rest"
 
@@ -101,20 +112,23 @@ class ZetarisRestClient:
         }
 
     def query(self, sql: str, limit: int = 1000) -> QueryResult:
-        body = {"queryId": str(uuid.uuid4()), "sql": sql, "source": "SqlEditor", "limit": limit}
         last: Exception | None = None
         for attempt in range(self.retries + 1):
+            # Fresh queryId per attempt: Zetaris rejects a reused id with "Query id already exists",
+            # which would hide the real error of the first attempt.
+            body = {"queryId": str(uuid.uuid4()), "sql": sql, "source": "SqlEditor", "limit": limit}
             t0 = time.perf_counter()
             try:
                 resp = self._http.post(f"{self.base}/sql-editor/sqls/run", json=body, headers=self._headers())
                 if resp.status_code >= 400:
-                    raise ZetarisError(f"HTTP {resp.status_code}: {resp.text[:300]}")
+                    raise ZetarisError(f"HTTP {resp.status_code}: {_error_text(resp)}")
                 out = resp.json()
                 self.query_count += 1
                 rows = out.get("data") if isinstance(out, dict) else None
                 columns = None
                 if isinstance(out, dict):
-                    cols = out.get("columns") or out.get("schema")
+                    # Live Zetaris returns column names under "headers".
+                    cols = out.get("headers") or out.get("columns") or out.get("schema")
                     if isinstance(cols, list):
                         columns = [c.get("name") if isinstance(c, dict) else str(c) for c in cols]
                 return QueryResult(sql, columns, rows or [], self.name, (time.perf_counter() - t0) * 1000)
