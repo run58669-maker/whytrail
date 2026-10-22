@@ -1,0 +1,10 @@
+[project]
+name = "whytrail"
+version = "0.1.0"
+description = "A falsification-first agent that explains why a metric changed, with an evidence trail from Zetaris."
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,24 @@
+{
+  "name": "WhyTrail",
+  "tagline": "An agent that explains why a metric changed, and shows the query behind every number.",
+  "track": "TRACK 02 - The Agent That Can Explain Why",
+  "team": "Wei Fang Solo",
+  "entry_points": {
+    "cli": "python -m whytrail --mock \"<question>\"",
+    "http": "python run.py  ->  POST /run"
+  },
+  "agents": ["Planner", "Retriever", "Analyst", "Skeptic", "Verifier", "Writer"],
+  "sponsor_technology": {
+    "zetaris": "All evidence is read through Zetaris Lightning SQL over the direct REST API (POST /api/v1.0/sql-editor/sqls/run). Three sources (NY_TAXI, NOAA_GHCN, REF) are queried with qualified names, including a federated join across all three. The Verifier re-queries Zetaris independently to check every cited number. Status: REST client implemented and unit-tested against the documented request shape; live instance run pending (local Docker install).",
+    "meterless": "Two engines implemented from the Meterless reference architectures: World Model (WorldStore + IngestPipeline + ContextBuilder) holds the evidence ledger with provenance and is read by Skeptic and Writer; H-MEM (MemoryStore + MemoryRetrieval) persists schema facts and hypothesis verdicts across runs and is read by the Planner. Both use an injected generator. JSONL evidence in logs/.",
+    "cursor": "Development environment. Project rules for Cursor Agent live in .cursor/rules/whytrail.mdc. The first skeleton commit was written with Claude Code before the Cursor workspace was set up; Cursor-made commits are tagged [cursor].",
+    "nvidia": "Not used yet. Planned: route the Skeptic role to NVIDIA Nemotron through the injected generator."
+  },
+  "models": ["claude-opus-5-5 (default, via Anthropic SDK)", "offline mock generator for SAMPLE_MODE"],
+  "data": {
+    "sample_mode": "Synthetic January 2024 data shaped like NY_TAXI trip aggregates, NOAA GHCN-Daily Central Park weather and US federal holidays (whytrail/sample_data.py). Not real TLC/NOAA data.",
+    "live": "Zetaris built-in NY_TAXI sample, NOAA GHCN-Daily (CC0) registered as a Zetaris file source, holiday reference CSV."
+  },
+  "pre_existing_components": "None. Code written after the build window opened (2026-10-22 00:00 UTC). Zetaris getting-started docs and Meterless engine docs were used as references only.",
+  "license": "Apache-2.0"
+}

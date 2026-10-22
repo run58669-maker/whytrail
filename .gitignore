@@ -1,0 +1,10 @@
+.env
+.env.local
+.whytrail/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# keep example traces in logs/, ignore ad-hoc runs
+logs/trace-run-*.tmp

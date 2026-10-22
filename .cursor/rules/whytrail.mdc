@@ -1,0 +1,27 @@
+---
+description: WhyTrail project rules for Cursor Agent
+globs: ["**/*.py", "README.md", "metadata.json"]
+alwaysApply: true
+---
+
+# WhyTrail project rules
+
+## What this project is
+A falsification-first investigation agent (Open Agent Hackathon 2026, Track 02 "The Agent That Can Explain Why").
+It answers "why did metric M change between period A and period B" with an evidence trail.
+
+## Hard constraints
+- Every number in an answer comes from a Zetaris query result stored in the World Model (`whytrail/meterless/world_model.py`). Never let model text introduce a number.
+- SQL goes only through the templates in `whytrail/queries.py`. Do not add free-form SQL paths. One statement per Zetaris call. Use qualified `SOURCE.table` names.
+- All model calls go through the injected generator (`whytrail/generator.py`). Engines (`whytrail/meterless/`) never import a model SDK.
+- `--mock` / `SAMPLE_MODE=true` must keep working offline with no credentials. Run `python -m pytest` before every commit.
+- Secrets come from environment variables only. Never write keys into code, logs, examples, or commit messages. Never ask an agent to create or fetch the Zetaris API key.
+- Bound every loop and every external call (Zetaris 20 s timeout, 1 retry; model budget `WHYTRAIL_MAX_COST_USD`).
+
+## Logging
+- Each run writes `logs/trace-<run_id>.jsonl` (official recommended fields) and `logs/world-<run_id>.jsonl`.
+- New agent actions must emit a `Tracer.event(...)` so judges can follow the handoffs.
+
+## Style
+- Python 3.11+, type hints, small functions. Keep diffs focused; do not refactor unrelated code.
+- Commits made with Cursor Agent say so in the commit message (`[cursor]`).
