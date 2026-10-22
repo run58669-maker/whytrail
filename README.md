@@ -4,15 +4,14 @@
 
 Open Agent Hackathon 2026, **Track 02: The Agent That Can Explain Why**.
 
-An operations analyst asks: *"Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"*
+An operations analyst asks: *"Why did Manhattan taxi trips drop in the week of 2025-01-20 compared with the week of 2025-01-13?"*
 WhyTrail does not guess. It lists the competing explanations, tries to **falsify** each one with a query against
 federated data in Zetaris, has a Skeptic attack the survivors, has a Verifier re-derive every cited number through an
 independent query, and only then writes the answer. Every claim in the answer links to a fact with its SQL, source
 tables, row count and result hash.
 
-> Status (2026-10-22): the full loop runs end to end in sample mode and with live Claude on sample data. The Zetaris
-> REST client is implemented and unit-tested against the documented request shape; the first run against a live
-> Zetaris instance is pending (local Docker install). See [Status](#status).
+> Status (2026-10-22): the full loop runs end to end against a live local Zetaris instance (Docker) with live Claude,
+> on real data, and offline in sample mode. See [Status](#status).
 
 ## Architecture
 
@@ -95,17 +94,23 @@ cp .env.example .env     # only needed for live mode
 ## Usage
 
 ```bash
-# Offline, no credentials (same as SAMPLE_MODE=true)
+# Offline, no credentials (same as SAMPLE_MODE=true); synthetic sample data is January 2024
 python -m whytrail --mock "Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"
 
 # Live model (Claude, default claude-opus-5-5), sample data
 ANTHROPIC_API_KEY=... python -m whytrail --mock-data "<question>"
 
 # Fully live: Zetaris + Claude (needs ZETARIS_REST_URL / ZETARIS_ORG_ID / ZETARIS_API_KEY)
-python -m whytrail "<question>"
+python -m whytrail "Why did Manhattan taxi trips drop in the week of 2025-01-20 compared with the week of 2025-01-13?"
+
+# With no question, the CLI picks the right default per mode (2024-01 sample question in --mock; 2025-01 live default otherwise).
 
 # HTTP API
 python run.py
+# Live (real data)
+curl -X POST localhost:8000/run -H 'content-type: application/json' \
+  -d '{"run_id":"demo-001","input":{"query":"Why did Manhattan taxi trips drop in the week of 2025-01-20 compared with the week of 2025-01-13?"},"options":{"sample_mode":false}}'
+# Sample (synthetic January 2024)
 curl -X POST localhost:8000/run -H 'content-type: application/json' \
   -d '{"run_id":"demo-001","input":{"query":"Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"},"options":{"sample_mode":true}}'
 
@@ -114,6 +119,20 @@ python -m pytest
 ```
 
 Flags: `--json` (full result), `--reset-memory`, `--memory PATH`, `--max-cost USD`, `--quiet`.
+
+## Example output (live: Zetaris + Claude, real data)
+
+One recorded run (`run-fdb61cc2`, 2026-10-22). Full transcript:
+[`examples/run5_live_zetaris_claude.txt`](examples/run5_live_zetaris_claude.txt).
+
+```
+Manhattan trips changed -1.42% (758,672 -> 747,921) from 2025-01-13..2025-01-19 to 2025-01-20..2025-01-26.
+Why: H_holiday (confidence 0.95). MLK Day (2025-01-20) had 16,783 fewer trips than the matched weekday
+(100% of the gross loss); the other six days were +6,032 combined.
+Ruled out: weather, data gap, price, Manhattan-only (other boroughs +8.5%).
+Verifier re-derived both totals from raw rows: match.
+20 Zetaris queries, 3 Claude calls, 29.6 s, $0.053.
+```
 
 ## Example output (sample mode)
 
@@ -137,23 +156,36 @@ direction (Brooklyn, rise), and a live-Claude run on sample data.
 | Mode | Data |
 |---|---|
 | Sample (`--mock`) | **Synthetic** January 2024 data generated deterministically in [`whytrail/sample_data.py`](whytrail/sample_data.py), shaped like NY_TAXI daily trip aggregates, NOAA GHCN-Daily Central Park weather and US federal holidays. Not real TLC or NOAA data. |
-| Live | Zetaris built-in `NY_TAXI` sample; NOAA GHCN-Daily Central Park station `USW00094728` (CC0, `s3://noaa-ghcn-pds/csv/by_station/`) registered as a Zetaris file source; holiday reference CSV. Live table mapping is set up once the instance is running. |
+| Live | Real data: `NY_TAXI.taxi_daily` (2024-04-01 .. 2025-02-28), `NOAA_GHCN.central_park_daily` (through 2025-02-05), `REF.us_holidays`. See [Live table mapping](#live-table-mapping). |
+
+### Live table mapping
+
+- `NY_TAXI.taxi_daily`: daily x borough aggregate built inside Zetaris from the built-in trip-level
+  `NY_TAXI.yellow_taxi` sample (pickup zone -> borough), materialised with `RUN EXPORT TO STORAGE` (one full scan,
+  about 32 minutes on a laptop Docker instance) to `/home/zetaris/customer-data/shared/whytrail/taxi_daily`; rows with
+  out-of-range timestamps were dropped (`taxi_daily_clean`) and the table is registered on the clean copy.
+  2,002 rows, 2024-04-01 .. 2025-02-28, 38,539,715 trips, 6 boroughs.
+- `NOAA_GHCN.central_park_daily`: NOAA GHCN-Daily station USW00094728 (Central Park), official CSV from
+  `s3://noaa-ghcn-pds/csv/by_station/` (CC0), pivoted to one row per day (prcp_mm, snow_mm, tmax_c, tmin_c);
+  402 rows, through 2025-02-05. Registered as a new Lightning database `NOAA_GHCN`.
+- `REF.us_holidays`: US federal holidays (OPM list), 22 rows, new Lightning database `REF`.
+- Built-in sample tables were not modified. Each template query runs in 0.4-2.3 s on the aggregate tables.
+- Questions outside the data range return a `NoDataError` that names the available range (no crash).
 
 ## Status
 
 Done: orchestrator, five agents, Zetaris REST client + mock, World Model, H-MEM, injected generator (Claude + mock),
-CLI, `POST /run`, JSONL traces, 12 unit tests, live Claude run on sample data.
+CLI, `POST /run`, JSONL traces, live Zetaris instance, live table mapping, NoDataError handling, 17 unit tests,
+live Claude run on sample data.
 
-Next: run against a live Zetaris instance (`SELECT 1`, `SHOW LIGHTNING TABLES NY_TAXI`), map the real NY_TAXI
-tables, register NOAA GHCN as a file source, record live examples, web UI, NVIDIA Nemotron for the Skeptic,
-Docker image test, demo video.
+Next: web UI, NVIDIA Nemotron for the Skeptic, Docker image test, demo video, slide deck.
 
 ## How we built it
 
-- **Cursor** is the development environment for this repo. `.cursor/rules/whytrail.mdc` gives Cursor Agent the
-  project's hard constraints (numbers only from Zetaris facts, SQL only through templates, injected generator,
-  sample mode must stay green, no secrets). Commits made with Cursor Agent are tagged `[cursor]` in the message.
-- The first skeleton commit was written with Claude Code from the terminal, before the Cursor workspace was set up.
+- **Cursor** is the development environment. Cursor Agent (CLI, `agent -p`) made the commits tagged `[cursor]` from
+  this point on, using [`.cursor/rules/whytrail.mdc`](.cursor/rules/whytrail.mdc). The skeleton commit and commit
+  a7c2a96 were written with Claude Code from the terminal (a7c2a96 is tagged `[cursor]` but its message says it was
+  not made by Cursor); later `[cursor]` commits were made by Cursor Agent.
 - Zetaris integration follows `zetaris/getting-started` (`docs/connections/client-setup.md`, `scripts/zetaris_sql.py`);
   Meterless engines follow the Meterless README and the World Model / H-MEM engine documents.
 

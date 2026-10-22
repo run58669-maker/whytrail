@@ -8,13 +8,13 @@ from typing import Any
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from .__main__ import DEFAULT_Q, build
+from .__main__ import build, default_question
 
 app = FastAPI(title="WhyTrail", version="0.1.0")
 
 
 class RunInput(BaseModel):
-    query: str = DEFAULT_Q
+    query: str | None = None
 
 
 class RunOptions(BaseModel):
@@ -35,5 +35,6 @@ def health() -> dict[str, str]:
 @app.post("/run")
 def run(req: RunRequest) -> dict[str, Any]:
     sample = req.options.sample_mode
+    query = req.input.query or default_question(sample)
     wt = build(sample, sample, os.environ.get("WHYTRAIL_MEMORY", ".whytrail/hmem.json"), "logs", echo=True)
-    return wt.run(req.input.query, run_id=req.run_id).to_dict()
+    return wt.run(query, run_id=req.run_id).to_dict()

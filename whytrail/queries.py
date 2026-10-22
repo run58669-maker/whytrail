@@ -23,6 +23,7 @@ TEMPLATES = {
     "schema_probe": "SELECT * FROM {table} LIMIT 1",
     "segments": f"SELECT DISTINCT borough FROM {TAXI}",
     "metric_total": f"SELECT SUM(trips) AS trips FROM {TAXI} WHERE borough = '{{seg}}' AND trip_date BETWEEN '{{start}}' AND '{{end}}'",
+    "data_range": f"SELECT MIN(trip_date) AS first_day, MAX(trip_date) AS last_day FROM {TAXI} WHERE borough = '{{seg}}'",
     "weather": f"SELECT SUM(prcp_mm) AS prcp_mm, SUM(snow_mm) AS snow_mm FROM {WEATHER} WHERE obs_date BETWEEN '{{start}}' AND '{{end}}'",
     "holiday": f"SELECT COUNT(*) AS holidays FROM {HOLIDAYS} WHERE holiday_date BETWEEN '{{start}}' AND '{{end}}'",
     "price": f"SELECT SUM(fare_total_usd) / SUM(trips) AS fare_per_trip FROM {TAXI} WHERE borough = '{{seg}}' AND trip_date BETWEEN '{{start}}' AND '{{end}}'",

@@ -11,7 +11,12 @@ from .generator import make_generator
 from .orchestrator import WhyTrail
 from .zetaris import make_client
 
-DEFAULT_Q = "Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"
+DEFAULT_SAMPLE_Q = "Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"
+DEFAULT_Q = "Why did Manhattan taxi trips drop in the week of 2025-01-20 compared with the week of 2025-01-13?"
+
+
+def default_question(sample_mode: bool) -> str:
+    return DEFAULT_SAMPLE_Q if sample_mode else DEFAULT_Q
 
 
 def build(mock_data: bool, mock_llm: bool, memory: str | None, log_dir: str, echo: bool = True,
@@ -22,7 +27,7 @@ def build(mock_data: bool, mock_llm: bool, memory: str | None, log_dir: str, ech
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="whytrail", description="Explain why a metric changed, with an evidence trail.")
-    p.add_argument("question", nargs="?", default=DEFAULT_Q)
+    p.add_argument("question", nargs="?", default=None)
     p.add_argument("--mock", action="store_true", help="offline: mock Zetaris data + mock generator (same as SAMPLE_MODE=true)")
     p.add_argument("--mock-data", action="store_true", help="mock Zetaris only, live model")
     p.add_argument("--memory", default=os.environ.get("WHYTRAIL_MEMORY", ".whytrail/hmem.json"))
@@ -34,15 +39,17 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
 
     sample = a.mock or os.environ.get("SAMPLE_MODE", "").lower() == "true"
+    question = a.question or default_question(sample)
     if a.reset_memory and os.path.exists(a.memory):
         os.remove(a.memory)
     wt = build(sample or a.mock_data, sample, a.memory, a.log_dir, echo=not a.quiet, max_cost=a.max_cost)
-    res = wt.run(a.question)
+    res = wt.run(question)
     if a.json:
         print(json.dumps(res.to_dict(), indent=2, default=str))
         return 0 if res.status == "success" else 1
     if res.status != "success":
-        print(f"ERROR {res.error}")
+        err = res.error or {}
+        print(f"ERROR {err.get('type', 'Error')}: {err.get('message', err)}")
         return 1
     r = res.result
     print("\n=== WhyTrail answer ===")

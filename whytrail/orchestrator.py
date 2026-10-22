@@ -28,6 +28,11 @@ from .zetaris import QueryResult, ZetarisError, to_number
 
 VERIFY_TOLERANCE = 0.005
 
+
+class NoDataError(ValueError):
+    """Asked periods have no rows (or baseline is zero); user can rephrase inside the available range."""
+
+
 AGENTS = [
     {"name": "Planner", "role": "Splits the question into competing, falsifiable hypotheses (reads H-MEM)"},
     {"name": "Retriever", "role": "Runs restricted SQL templates through Zetaris; ingests results into the World Model"},
@@ -150,7 +155,12 @@ class WhyTrail:
         except ZetarisError as e:
             self.t.event(agent, "zetaris_query", input_summary=sql, output_summary=str(e), status="error")
             raise
-        value: Any = res.rows if template in ("daily_joined", "verify_rows", "segments", "schema_probe") else res.scalar()
+        if template in ("daily_joined", "verify_rows", "segments", "schema_probe"):
+            value: Any = res.rows
+        elif template == "data_range":
+            value = res.rows[0] if res.rows else [None, None]
+        else:
+            value = res.scalar()
         if template == "weather":
             value = {"prcp_mm": to_number(res.rows[0][0]) or 0.0, "snow_mm": to_number(res.rows[0][1]) or 0.0}
         fact = self.ingest.ingest_query(kind, res, value, entities, agent)
@@ -159,6 +169,24 @@ class WhyTrail:
                      output_summary=f"{len(res.rows)} rows via {res.source} -> {fact.id}",
                      fact_id=fact.id, channel=res.source, elapsed_ms=round(res.elapsed_ms, 1))
         return res, fact
+
+    def _raise_no_data(self, q: Question, ents: dict, metric_a: Any, metric_b: Any) -> None:
+        _, fr = self._q("Retriever", "data_range", "data_range", [ents["seg"]], seg=q.segment)
+        row = list(fr.value) if isinstance(fr.value, (list, tuple)) else [None, None]
+        first_day, last_day = (row + [None, None])[:2]
+        empty: list[str] = []
+        if metric_a is None or metric_a == 0:
+            empty.append(str(q.period_a))
+        if metric_b is None:
+            empty.append(str(q.period_b))
+        periods = " and ".join(empty) if empty else f"{q.period_a} and {q.period_b}"
+        if first_day is None or last_day is None:
+            msg = f"no {Q.TAXI} rows for {q.segment}; the segment has no data at all."
+        else:
+            msg = (f"no {Q.TAXI} rows for {q.segment} in {periods}; "
+                   f"available data: {first_day}..{last_day}. Ask about weeks inside that range.")
+        self.t.event("Orchestrator", "no_data", output_summary=msg, status="error")
+        raise NoDataError(msg)
 
     # ---------- main loop ----------
     def run(self, question_text: str, run_id: str | None = None) -> RunResult:
@@ -178,7 +206,8 @@ class WhyTrail:
         except Exception as e:  # structured error instead of a crash
             self.t.event("Orchestrator", "error", output_summary=f"{type(e).__name__}: {e}", status="error")
             return RunResult(run_id, "error", "", {}, [], {"queries": self.queries}, str(self.t.path), str(self.world.path),
-                             error={"type": type(e).__name__, "message": str(e), "recoverable": isinstance(e, ZetarisError)})
+                             error={"type": type(e).__name__, "message": str(e),
+                                    "recoverable": isinstance(e, (ZetarisError, NoDataError))})
 
     def _run(self, question_text: str, run_id: str, mem: MemoryStore, retr: MemoryRetrieval, t0: float) -> RunResult:
         # 1. schema discovery, unless H-MEM already knows the schema
@@ -214,6 +243,8 @@ class WhyTrail:
         _, fb = self._q("Retriever", "metric", "metric_total", [ents["metric"], ents["seg"], ents["B"]],
                         seg=q.segment, start=q.period_b.start, end=q.period_b.end)
         metric_a, metric_b = fa.value, fb.value
+        if metric_a is None or metric_b is None or metric_a == 0:
+            self._raise_no_data(q, ents, metric_a, metric_b)
         if "metric_b" in self._tamper:  # test hook only
             metric_b = fb.value * (1 + self._tamper["metric_b"])
         change = (metric_b - metric_a) / metric_a * 100 if metric_a else 0.0

@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from whytrail import queries as Q
+from whytrail.__main__ import DEFAULT_Q, DEFAULT_SAMPLE_Q, default_question
 from whytrail.generator import MockGenerator, parse_json
 from whytrail.meterless.hmem import Memory, MemoryRetrieval, MemoryStore
 from whytrail.meterless.world_model import IngestPipeline, WorldStore
@@ -170,3 +171,32 @@ def test_api_run_sample_mode(tmp_path, monkeypatch):
     out = TestClient(app).post("/run", json={"run_id": "api1", "input": {"query": QUESTION},
                                             "options": {"sample_mode": True}}).json()
     assert out["status"] == "success" and out["log_file"].endswith("trace-api1.jsonl")
+
+
+def test_no_data_period_gives_clear_error(tmp_path):
+    q = ("Why did Manhattan taxi trips drop in the week of 2023-06-12 "
+         "compared with the week of 2023-06-05?")
+    res = make(tmp_path).run(q, run_id="nodata")
+    assert res.status == "error"
+    assert res.error is not None
+    assert res.error["type"] == "NoDataError"
+    assert res.error["recoverable"] is True
+    msg = res.error["message"]
+    assert "available data" in msg and "2024-01-" in msg
+    assert "TypeError" not in msg
+    events = [json.loads(l) for l in (tmp_path / "logs" / "trace-nodata.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert any(e["agent_name"] == "Orchestrator" and e["action"] == "no_data" for e in events)
+
+
+def test_data_range_template_renders():
+    sql = Q.render("data_range", seg="Manhattan")
+    assert "MIN(trip_date)" in sql and "MAX(trip_date)" in sql and "Manhattan" in sql
+    with pytest.raises(Q.TemplateError):
+        Q.render("data_range", seg="x' OR '1'='1")
+
+
+def test_cli_default_question_by_mode():
+    assert default_question(True) == DEFAULT_SAMPLE_Q
+    assert default_question(False) == DEFAULT_Q
+    assert "2024-01-15" in DEFAULT_SAMPLE_Q
+    assert "2025-01-20" in DEFAULT_Q
