@@ -1,0 +1,136 @@
+$ python -m whytrail --memory .whytrail/hmem-live-1024.json --reset-memory   # 2026-10-24, live: local Zetaris (Docker) + Claude claude-opus-5-5; .env loaded by the CLI
+# (no question given -> live default question)
+# Skeptic follow-up catalog in place: the Skeptic asked for both tests, isolate_daytype (federated join) and
+# baseline_variation (period before A); the second one found the drop within ordinary variation and cut confidence 0.95 -> 0.66.
+
+--- stderr (trace) ---
+[INFO] run_id=run-bf77f40c Orchestrator.start: H-MEM hydrated 0 memories
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_4c6f8c5710
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_b8922608a8
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_c936ac621f
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 6 rows via zetaris-rest -> f_cdc560b1ba
+[INFO] run_id=run-bf77f40c Orchestrator.parse: segment=Manhattan A=2025-01-13..2025-01-19 B=2025-01-20..2025-01-26
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_f4317f87b6
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_1af1bae764
+[INFO] run_id=run-bf77f40c Planner.hmem_retrieve: 0 memories injected
+[INFO] run_id=run-bf77f40c Planner.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-bf77f40c Planner.delegate_task: testing ['H_holiday', 'H_weather', 'H_data_gap', 'H_price', 'H_local']; skipped from memory []
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_b668b44f81
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_75f1825a48
+[INFO] run_id=run-bf77f40c Analyst.verdict: supported: holidays in period: 0 -> 1
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_60fc69bd8d
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_4858832554
+[INFO] run_id=run-bf77f40c Analyst.verdict: refuted: snow 41mm -> 0mm, precipitation 9mm -> 0mm
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_9457ecdef0
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_34ab0fd871
+[INFO] run_id=run-bf77f40c Analyst.verdict: refuted: days with data 7 -> 7
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_a9d5a89340
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_e4dd8bb6be
+[INFO] run_id=run-bf77f40c Analyst.verdict: refuted: fare per trip $13.87 -> $13.72
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_ef7be50d2f
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_52495cef71
+[INFO] run_id=run-bf77f40c Analyst.verdict: refuted: Manhattan -1.4% vs other segments +8.5%
+[INFO] run_id=run-bf77f40c Skeptic.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-bf77f40c Skeptic.request_followup: 2 challenges
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 7 rows via zetaris-rest -> f_8a80fc0589
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 7 rows via zetaris-rest -> f_e74b3e1850
+[INFO] run_id=run-bf77f40c Skeptic.followup_executed: day-type attribution: holiday, other
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_b88cba7501
+[WARN] run_id=run-bf77f40c Skeptic.followup_executed: Manhattan moved +13.8% from 2025-01-06..2025-01-12 into period A and -1.4% into period B: the change is within ordinary variation
+[INFO] run_id=run-bf77f40c Verifier.zetaris_query: 7 rows via zetaris-rest -> f_0203d716c5
+[INFO] run_id=run-bf77f40c Verifier.check: metric_a: cited 758,672 vs re-derived 758,672 -> ok
+[INFO] run_id=run-bf77f40c Verifier.zetaris_query: 7 rows via zetaris-rest -> f_cf3eb3b025
+[INFO] run_id=run-bf77f40c Verifier.check: metric_b: cited 747,921 vs re-derived 747,921 -> ok
+[INFO] run_id=run-bf77f40c Writer.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-bf77f40c Writer.final_synthesis: Manhattan taxi trips fell from 758,672 in the week of 2025-01-13 to 747,921 in the week of 2025-01-20, a drop of 1.42%, and the evidence points to Martin Luther
+[INFO] run_id=run-bf77f40c Orchestrator.done: 21 Zetaris queries, 3 model calls
+
+--- stdout ---
+=== WhyTrail answer ===
+Manhattan taxi trips fell from 758,672 in the week of 2025-01-13 to 747,921 in the week of 2025-01-20, a drop of 1.42%, and the evidence points to Martin Luther King Jr. Day on 2025-01-20. That holiday Monday logged only 71,364 trips versus 88,147 the prior Monday, a loss of 16,783 trips. The other six days of the week actually gained 6,032 trips, so the holiday accounts for the entire net decline. Even so, the change is small: the prior move from the week of 2025-01-06 (666,892 trips) was +13.76%, so this dip is within ordinary variation, and overall confidence is moderate at 0.66.
+
+Several other explanations were ruled out. Weather was not the cause, since the later week had 0.0 mm of precipitation and snow while the earlier week had 41.0 mm of snow. Missing data was not the cause, since both weeks had all 7 days of coverage. Higher prices were not the cause, since the average fare per trip slightly fell from about 13.87 to 13.72. A Manhattan-only event was also unlikely, since peer trips rose from 84,443 to 91,643.
+
+This conclusion would be overturned if ordinary non-holiday, dry days in the later week showed a drop of similar size, if fare per trip turned out to have risen, or if another borough without snow fell just as much.
+
+confidence=0.66  supported=['H_holiday']
+
+=== why-trail ===
+- H_holiday -> supported: A public holiday inside period B lowered trips | holidays in period: 0 -> 1; Skeptic follow-up: holiday days explain 100% of the drop  [evidence f_b668b44f81, f_75f1825a48]
+- H_weather -> refuted: Snow or heavy precipitation in period B suppressed taxi demand | snow 41mm -> 0mm, precipitation 9mm -> 0mm  [evidence f_60fc69bd8d, f_4858832554]
+- H_data_gap -> refuted: Missing days in the data, not real demand, explain the drop | days with data 7 -> 7  [evidence f_9457ecdef0, f_34ab0fd871]
+- H_price -> refuted: A higher fare per trip in period B priced riders out | fare per trip $13.87 -> $13.72  [evidence f_a9d5a89340, f_e4dd8bb6be]
+- H_local -> refuted: A segment-specific event, not a citywide one, caused the change | Manhattan -1.4% vs other segments +8.5%  [evidence f_ef7be50d2f, f_52495cef71]
+- attribution:holiday: holiday days: 16,783 lost trips (100.0%) | weekday-matched comparison, federated join NY_TAXI x NOAA_GHCN x REF  [evidence f_8a80fc0589, f_e74b3e1850]
+- attribution:other: other days: -6,032 lost trips (0.0%) | weekday-matched comparison, federated join NY_TAXI x NOAA_GHCN x REF  [evidence f_8a80fc0589, f_e74b3e1850]
+- skeptic:baseline_variation: Manhattan moved +13.8% from 2025-01-06..2025-01-12 into period A and -1.4% into period B: the change is within ordinary variation | Skeptic requested baseline_variation; baseline 2025-01-06..2025-01-12  [evidence f_b88cba7501]
+- verify:metric_a: 758,672 | re-derived 758,672 from raw rows -> ok  [evidence f_0203d716c5]
+- verify:metric_b: 747,921 | re-derived 747,921 from raw rows -> ok  [evidence f_cf3eb3b025]
+
+zetaris_queries=21 model_calls=3 cost=$0.0487 world_facts=21 hmem_records=7 seconds=35.96
+trace: logs/trace-run-bf77f40c.jsonl
+world: logs/world-run-bf77f40c.jsonl
+
+--- same instance, warm memory (schema + verdicts from the run above), Thanksgiving week ---
+$ python -m whytrail --memory .whytrail/hmem-live-1024.json "Why did Manhattan taxi trips drop in the week of 2024-11-25 compared with the week of 2024-11-18?"
+
+--- stderr (trace) ---
+[INFO] run_id=run-8180f81b Orchestrator.start: H-MEM hydrated 7 memories
+[INFO] run_id=run-8180f81b Planner.hmem_retrieve: schema from memory m_3260fa0627; skipped 4 discovery queries
+[INFO] run_id=run-8180f81b Orchestrator.parse: segment=Manhattan A=2024-11-18..2024-11-24 B=2024-11-25..2024-12-01
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_621d35447c
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_bdbf26644f
+[INFO] run_id=run-8180f81b Planner.hmem_retrieve: 5 memories injected
+[INFO] run_id=run-8180f81b Planner.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-8180f81b Planner.delegate_task: testing ['H_holiday', 'H_data_gap', 'H_weather', 'H_price', 'H_local']; skipped from memory []
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_98b1dc853b
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_0621ac554c
+[INFO] run_id=run-8180f81b Analyst.verdict: supported: holidays in period: 0 -> 1
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_41e69662e4
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_6463438d33
+[INFO] run_id=run-8180f81b Analyst.verdict: refuted: days with data 7 -> 7
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_6d6c8d2b52
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_9ec72483de
+[INFO] run_id=run-8180f81b Analyst.verdict: refuted: snow 0mm -> 0mm, precipitation 54mm -> 27mm
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_87782e2e67
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_6f6e36030c
+[INFO] run_id=run-8180f81b Analyst.verdict: refuted: fare per trip $15.83 -> $15.47
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_5a469afffc
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_68ba342e9b
+[INFO] run_id=run-8180f81b Analyst.verdict: supported: Manhattan -26.6% vs other segments -13.4%
+[INFO] run_id=run-8180f81b Skeptic.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-8180f81b Skeptic.request_followup: 2 challenges
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 7 rows via zetaris-rest -> f_2de7a6ab03
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 7 rows via zetaris-rest -> f_a51d802c4e
+[INFO] run_id=run-8180f81b Skeptic.followup_executed: day-type attribution: other, holiday
+[INFO] run_id=run-8180f81b Retriever.zetaris_query: 1 rows via zetaris-rest -> f_787194349f
+[INFO] run_id=run-8180f81b Skeptic.followup_executed: Manhattan moved +0.9% from 2024-11-11..2024-11-17 into period A and -26.6% into period B: the change is larger than ordinary variation
+[INFO] run_id=run-8180f81b Verifier.zetaris_query: 7 rows via zetaris-rest -> f_1f5dc0c218
+[INFO] run_id=run-8180f81b Verifier.check: metric_a: cited 815,141 vs re-derived 815,141 -> ok
+[INFO] run_id=run-8180f81b Verifier.zetaris_query: 7 rows via zetaris-rest -> f_8135029826
+[INFO] run_id=run-8180f81b Verifier.check: metric_b: cited 598,641 vs re-derived 598,641 -> ok
+[INFO] run_id=run-8180f81b Writer.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-8180f81b Writer.final_synthesis: Manhattan taxi trips fell 26.56%, from 815,141 in the week of 2024-11-18 to 598,641 in the week of 2024-11-25, and the evidence points to the Thanksgiving holid
+[INFO] run_id=run-8180f81b Orchestrator.done: 17 Zetaris queries, 3 model calls
+
+--- stdout ---
+=== WhyTrail answer ===
+Manhattan taxi trips fell 26.56%, from 815,141 in the week of 2024-11-18 to 598,641 in the week of 2024-11-25, and the evidence points to the Thanksgiving holiday week plus a Manhattan-specific effect, though confidence is only 0.33. Thanksgiving Day itself (2024-11-28, 66,523 trips) accounts for 71,284 lost trips (32.9%), while the other six days of the week account for 145,216 lost trips (67.1%), which fits a broader holiday-week slowdown rather than a single bad day. The prior week moved only 0.88% against its own baseline of 808,041, so this drop is well outside ordinary variation, and the comparison group of other areas fell less sharply (100,296 to 86,826), suggesting Manhattan was hit harder. We ruled out a data gap (both weeks have all 7 days), weather (no snow in either week, and precipitation was lower in the drop week at 26.6 mm versus 53.9 mm), and price (average fare per trip slipped from about 15.83 to 15.47 rather than rising). This conclusion would be overturned if the ordinary non-holiday, dry days in the drop week turned out to fall by a similar size for reasons unrelated to the holiday, if fare per trip actually rose, or if another borough without snow dropped just as much as Manhattan.
+
+confidence=0.33  supported=['H_holiday', 'H_local']
+
+=== why-trail ===
+- H_holiday -> supported: A public holiday inside period B lowered trips | holidays in period: 0 -> 1; Skeptic follow-up: holiday days explain 33% of the drop  [evidence f_98b1dc853b, f_0621ac554c]
+- H_data_gap -> refuted: Missing days in the data, not real demand, explain the drop | days with data 7 -> 7  [evidence f_41e69662e4, f_6463438d33]
+- H_weather -> refuted: Snow or heavy precipitation in period B suppressed taxi demand | snow 0mm -> 0mm, precipitation 54mm -> 27mm  [evidence f_6d6c8d2b52, f_9ec72483de]
+- H_price -> refuted: A higher fare per trip in period B priced riders out | fare per trip $15.83 -> $15.47  [evidence f_87782e2e67, f_6f6e36030c]
+- H_local -> supported: A segment-specific event, not a citywide one, caused the change | Manhattan -26.6% vs other segments -13.4%  [evidence f_5a469afffc, f_68ba342e9b]
+- attribution:other: other days: 145,216 lost trips (67.1%) | weekday-matched comparison, federated join NY_TAXI x NOAA_GHCN x REF  [evidence f_2de7a6ab03, f_a51d802c4e]
+- attribution:holiday: holiday days: 71,284 lost trips (32.9%) | weekday-matched comparison, federated join NY_TAXI x NOAA_GHCN x REF  [evidence f_2de7a6ab03, f_a51d802c4e]
+- skeptic:baseline_variation: Manhattan moved +0.9% from 2024-11-11..2024-11-17 into period A and -26.6% into period B: the change is larger than ordinary variation | Skeptic requested baseline_variation; baseline 2024-11-11..2024-11-17  [evidence f_787194349f]
+- verify:metric_a: 815,141 | re-derived 815,141 from raw rows -> ok  [evidence f_1f5dc0c218]
+- verify:metric_b: 598,641 | re-derived 598,641 from raw rows -> ok  [evidence f_8135029826]
+
+zetaris_queries=17 model_calls=3 cost=$0.0575 world_facts=17 hmem_records=13 seconds=25.8
+trace: logs/trace-run-8180f81b.jsonl
+world: logs/world-run-8180f81b.jsonl

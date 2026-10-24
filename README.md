@@ -14,8 +14,8 @@ tables, row count and result hash; the Verifier's second, independent derivation
 Judges: `pip install -r requirements.txt && python -m whytrail --mock` runs the whole loop offline in a few seconds,
 no keys ([Path A](#path-a--offline-judge-run-no-keys)).
 
-> Status (2026-10-22): the full loop runs end to end against a live local Zetaris instance (Docker) with live Claude,
-> on real data, and offline in sample mode. See [Status](#status).
+> Status (2026-10-24): the full loop runs end to end against a live local Zetaris instance (Docker) with live Claude,
+> on real data (Skeptic follow-ups included), and offline in sample mode. See [Status](#status).
 
 ## Architecture
 
@@ -160,20 +160,34 @@ python -m whytrail "Why did Manhattan taxi trips drop in the week of 2025-01-20 
 
 The CLI and `run.py` read `.env` themselves (stdlib loader in [`whytrail/env.py`](whytrail/env.py): `.env` in the
 current directory or the repo root; variables already exported in the shell win). Expected output, abridged from the
-recorded run [`examples/run5_live_zetaris_claude.txt`](examples/run5_live_zetaris_claude.txt):
+recorded run [`examples/run6_live_skeptic_followups.txt`](examples/run6_live_skeptic_followups.txt) (2026-10-24):
 
 ```
-[INFO] run_id=run-b5402d4e Retriever.zetaris_query: 1 rows via zetaris-rest -> f_4c6f8c5710
-[INFO] run_id=run-b5402d4e Planner.generate: model=claude-opus-5-5 ok
+[INFO] run_id=run-bf77f40c Retriever.zetaris_query: 1 rows via zetaris-rest -> f_4c6f8c5710
+[INFO] run_id=run-bf77f40c Planner.generate: model=claude-opus-5-5 ok
 ...
-[INFO] run_id=run-b5402d4e Verifier.check: metric_b: cited 747,921 vs re-derived 747,921 -> ok
+[INFO] run_id=run-bf77f40c Skeptic.request_followup: 2 challenges
+[INFO] run_id=run-bf77f40c Skeptic.followup_executed: day-type attribution: holiday, other
+[WARN] run_id=run-bf77f40c Skeptic.followup_executed: Manhattan moved +13.8% from 2025-01-06..2025-01-12 into period A and -1.4% into period B: the change is within ordinary variation
+[INFO] run_id=run-bf77f40c Verifier.check: metric_a: cited 758,672 vs re-derived 758,672 -> ok
+[INFO] run_id=run-bf77f40c Verifier.check: metric_b: cited 747,921 vs re-derived 747,921 -> ok
 
 === WhyTrail answer ===
-Manhattan taxi trips fell 1.42%, from 758,672 in the week of 2025-01-13 to 747,921 in the week of 2025-01-20.
-The drop is explained by Martin Luther King Jr. Day on 2025-01-20 ...
+Manhattan taxi trips fell from 758,672 in the week of 2025-01-13 to 747,921 in the week of 2025-01-20, a drop of 1.42%,
+and the evidence points to Martin Luther King Jr. Day on 2025-01-20 ... Even so, the change is small: the prior move
+from the week of 2025-01-06 (666,892 trips) was +13.76%, so this dip is within ordinary variation, and overall
+confidence is moderate at 0.66.
 
-zetaris_queries=20 model_calls=3 cost=$0.0565 world_facts=20 hmem_records=7 seconds=34.28
+confidence=0.66  supported=['H_holiday']
+
+zetaris_queries=21 model_calls=3 cost=$0.0487 world_facts=21 hmem_records=7 seconds=35.96
 ```
+
+The Skeptic asked for both catalog tests: `isolate_daytype` (the federated join) attributed 100% of the gross loss
+to the holiday, and `baseline_variation` found the -1.4% move smaller than the +13.8% move of the week before, which
+cut the confidence from 0.95 to 0.66. Run the same command again with a different question and H-MEM skips the four
+schema-discovery queries (`Planner.hmem_retrieve: schema from memory ...; skipped 4 discovery queries`; second half
+of the same transcript, Thanksgiving week 2024, -26.6%, 17 queries).
 
 A question outside the data range answers
 `ERROR NoDataError: no NY_TAXI.taxi_daily rows for Manhattan in ...; available data: 2024-04-01..2025-02-28.`
@@ -198,22 +212,31 @@ CLI flags: `--mock`, `--mock-data`, `--json` (full result), `--reset-memory`, `-
 
 ## Example output (live: Zetaris + Claude, real data)
 
-One recorded run (`run-b5402d4e`, 2026-10-22). Full transcript:
-[`examples/run5_live_zetaris_claude.txt`](examples/run5_live_zetaris_claude.txt).
+Recorded run `run-bf77f40c` (2026-10-24, Skeptic follow-up catalog in place). Full transcript:
+[`examples/run6_live_skeptic_followups.txt`](examples/run6_live_skeptic_followups.txt); trace
+`logs/trace-run-bf77f40c.jsonl`, world model `logs/world-run-bf77f40c.jsonl`.
 
 ```
 Manhattan trips changed -1.42% (758,672 -> 747,921) from 2025-01-13..2025-01-19 to 2025-01-20..2025-01-26.
-Why: H_holiday (confidence 0.95). MLK Day (2025-01-20) had 16,783 fewer trips than the matched weekday
+Why: H_holiday (confidence 0.66). MLK Day (2025-01-20) had 16,783 fewer trips than the matched weekday
 (100% of the gross loss); the other six days were +6,032 combined.
+Skeptic follow-ups: isolate_daytype (federated join, above) and baseline_variation: the week before period A
+moved +13.8%, so a -1.4% move is within ordinary variation -> confidence cut from 0.95 to 0.66.
 Ruled out: weather, data gap, price, Manhattan-only (other boroughs +8.5%).
 Verifier re-derived both totals from raw rows: match.
-20 Zetaris queries, 3 Claude calls, 34.3 s, $0.057.
+21 Zetaris queries, 3 Claude calls, 36.0 s, $0.049.
 ```
 
-The same transcript shows a question outside the data range returning `NoDataError` with the available range.
+Second question in the same transcript (`run-8180f81b`, warm H-MEM): Thanksgiving week, Manhattan -26.56%
+(815,141 -> 598,641); Thanksgiving Day explains 32.9% of the gross loss and the other six days 67.1%;
+`baseline_variation` finds the move larger than ordinary variation (week before: +0.9%); 17 queries, 25.8 s, $0.058.
+The earlier run `run-b5402d4e` (2026-10-22, [`examples/run5_live_zetaris_claude.txt`](examples/run5_live_zetaris_claude.txt))
+predates the follow-up catalog and also shows a question outside the data range returning `NoDataError` with the
+available range.
 
 Sample inputs and full outputs in [`examples/`](examples/): cold memory, warm memory, a different borough and
-direction (Brooklyn, rise), a live-Claude run on sample data, and a live Zetaris + Claude run on real data.
+direction (Brooklyn, rise), a live-Claude run on sample data, and two live Zetaris + Claude runs on real data
+(run5: before the follow-up catalog; run6: with both Skeptic follow-up tests executed).
 
 ## Data
 
@@ -274,8 +297,10 @@ Done: orchestrator, six agents (Planner, Retriever, Analyst, Skeptic, Verifier, 
 World Model, H-MEM, injected generator (Claude + mock), CLI, `POST /run`, JSONL traces, `.env` loading, live Zetaris
 instance, live table mapping, dataset reproduction scripts, Skeptic follow-up catalog (the Skeptic's requested test is
 executed and traced), NoDataError handling, 21 unit tests, live Claude run on sample data.
-- Live end-to-end run on local Zetaris (Docker) + Claude — see logs/trace-run-b5402d4e.jsonl (recorded before the
-  follow-up catalog existed: its Skeptic requested `isolate_daytype`, the only test then available).
+- Live end-to-end runs on local Zetaris (Docker) + Claude: logs/trace-run-bf77f40c.jsonl and
+  logs/trace-run-8180f81b.jsonl (2026-10-24, both Skeptic follow-up tests executed and traced as
+  `Skeptic.followup_executed`); logs/trace-run-b5402d4e.jsonl (2026-10-22, before the follow-up catalog existed:
+  its Skeptic requested `isolate_daytype`, the only test then available).
 
 Known limits: the Verifier re-derives the two headline totals only; the question parser is fixed to taxi trips, a
 borough and two ISO-dated periods; a model failure falls back to the offline generator and is marked `fallback` in the
