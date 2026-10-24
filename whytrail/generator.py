@@ -102,6 +102,8 @@ class MockGenerator:
                 "skipped": [{"id": h, "memory_id": mid} for h, mid in skip.items()]}
 
     def _skeptic(self, a: dict) -> dict:
+        # The offline Skeptic always asks for "isolate_daytype" so the recorded sample runs stay reproducible;
+        # a live Skeptic may pick any test from queries.FOLLOWUP_TESTS (e.g. "baseline_variation").
         challenges = []
         for h in a.get("supported", []):
             if h == "H_weather":

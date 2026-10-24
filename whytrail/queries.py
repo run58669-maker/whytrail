@@ -57,6 +57,15 @@ def render(name: str, **params: str) -> str:
     return TEMPLATES[name].format(**params)
 
 
+# Follow-up tests the Skeptic may request. The orchestrator executes only names from this catalog;
+# an unknown name is logged and replaced by "isolate_daytype".
+FOLLOWUP_TESTS = {
+    "isolate_daytype": ("federated join NY_TAXI x NOAA_GHCN x REF for both periods; weekday-matched gap per day type "
+                        "(holiday / snow / other). Answers: is the change concentrated on the days the hypothesis names?"),
+    "baseline_variation": ("total for the period of the same length just before period A (template metric_total). "
+                           "Answers: is the A->B change within ordinary period-to-period variation?"),
+}
+
 # Competing hypotheses the Planner may propose. Each names the template that can falsify it.
 HYPOTHESES = {
     "H_weather": {"claim": "Snow or heavy precipitation in period B suppressed taxi demand", "test": "weather"},

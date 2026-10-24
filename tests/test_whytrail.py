@@ -221,3 +221,30 @@ def test_cli_mock_data_default_question_in_mock_range(tmp_path, monkeypatch, cap
     assert seen == {"mock_data": True, "mock_llm": False}
     assert "2024-01-15..2024-01-21" in out and "NoDataError" not in out
     assert default_question(False or True) == DEFAULT_SAMPLE_Q
+
+
+def test_skeptic_requested_followup_is_executed_and_traced(tmp_path):
+    class SteeringSkeptic(MockGenerator):
+        def _skeptic(self, a):
+            out = super()._skeptic(a)
+            out["challenges"].append({"hypothesis": a["supported"][0], "test": "baseline_variation",
+                                      "alternative": "ordinary week-to-week variation could produce this shift"})
+            out["challenges"].append({"hypothesis": a["supported"][0], "test": "not_a_real_test", "alternative": "x"})
+            return out
+
+    plain = make(tmp_path / "plain").run(QUESTION, run_id="plain")
+    wt = WhyTrail(MockZetaris(), SteeringSkeptic(), memory_path=tmp_path / "hmem.json", log_dir=tmp_path / "logs", echo=False)
+    res = wt.run(QUESTION, run_id="steer")
+    assert res.status == "success"
+    assert res.stats["queries"] == plain.stats["queries"] + 1  # exactly one extra Zetaris query for the extra test
+    fu = res.result["skeptic_followups"]
+    assert len(fu) == 1 and fu[0]["test"] == "baseline_variation" and fu[0]["baseline_period"] == "2024-01-01..2024-01-07"
+    assert fu[0]["within_ordinary_variation"] is False  # -7.5% is larger than the New Year week -> week A move
+    assert res.result["confidence"] == plain.result["confidence"]
+    assert any(s["step"] == "skeptic:baseline_variation" and s["evidence"] == fu[0]["fact_ids"] for s in res.trail)
+    events = [json.loads(l) for l in (tmp_path / "logs" / "trace-steer.jsonl").read_text(encoding="utf-8").splitlines()]
+    executed = [e["input_summary"] for e in events if e["agent_name"] == "Skeptic" and e["action"] == "followup_executed"]
+    assert executed == ["isolate_daytype", "baseline_variation"]
+    assert any(e["action"] == "followup_rejected" and "not_a_real_test" in e["output_summary"] for e in events)
+    sql = [e["input_summary"] for e in events if e["action"] == "zetaris_query" and "2024-01-01' AND '2024-01-07" in e["input_summary"]]
+    assert len(sql) == 1 and sql[0].startswith("SELECT SUM(trips)")

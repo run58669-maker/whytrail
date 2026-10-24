@@ -1,7 +1,8 @@
-"""WhyTrail orchestrator: a bounded state machine over five agents.
+"""WhyTrail orchestrator: a bounded state machine over six agents.
 
     parse -> hydrate H-MEM -> Planner -> Retriever (Zetaris) -> Analyst verdicts
-          -> Skeptic challenges -> Retriever follow-up (federated join) -> Verifier
+          -> Skeptic challenges (each names a follow-up test from Q.FOLLOWUP_TESTS)
+          -> Retriever runs the requested follow-ups -> Verifier (re-derives the two headline totals)
           -> (Skeptic downgrades / Verifier blocks = needs_revision) -> Writer -> mine H-MEM
 
 Planner, Skeptic and Writer go through the injected generator. Retriever, Analyst and
@@ -36,8 +37,11 @@ class NoDataError(ValueError):
 AGENTS = [
     {"name": "Planner", "role": "Splits the question into competing, falsifiable hypotheses (reads H-MEM)"},
     {"name": "Retriever", "role": "Runs restricted SQL templates through Zetaris; ingests results into the World Model"},
-    {"name": "Skeptic", "role": "Challenges every supported hypothesis with an alternative and demands a follow-up test"},
-    {"name": "Verifier", "role": "Re-derives every cited number through an independent Zetaris query; blocks mismatches"},
+    {"name": "Analyst", "role": "Deterministic verdict per hypothesis (supported / refuted) from the query results"},
+    {"name": "Skeptic", "role": "Challenges every supported hypothesis with an alternative and picks the follow-up test "
+                                "to run from a fixed catalog (isolate_daytype, baseline_variation)"},
+    {"name": "Verifier", "role": "Re-derives the two headline totals (period A, period B) through an independent "
+                                 "Zetaris query; a mismatch blocks the Writer and replaces the number"},
     {"name": "Writer", "role": "Writes the answer and the why-trail from World Model context only"},
 ]
 
@@ -107,8 +111,9 @@ SYSTEM = {
                 "the catalog. Skip a hypothesis only if a memory shows it was refuted for the same signature. "
                 'Reply with JSON only: {"hypotheses":[{"id":..,"why":..}],"skipped":[{"id":..,"memory_id":..}]}'),
     "skeptic": ("ROLE: skeptic\nFor each supported hypothesis give the strongest alternative explanation and request "
-                'the follow-up test "isolate_daytype". Reply with JSON only: '
-                '{"challenges":[{"hypothesis":..,"alternative":..,"test":"isolate_daytype"}]}'),
+                "the follow-up test that would expose it, chosen from this catalog (the orchestrator runs what you "
+                "name):\n" + "\n".join(f'- "{k}": {v}' for k, v in Q.FOLLOWUP_TESTS.items()) +
+                '\nReply with JSON only: {"challenges":[{"hypothesis":..,"alternative":..,"test":..}]}'),
     "writer": ("ROLE: writer\nWrite a 3-6 sentence plain-English answer for an operations analyst. Use only numbers "
                "present in the context. Name ruled-out hypotheses and end with what evidence would overturn the "
                "conclusion. Plain text, no markdown."),
@@ -269,19 +274,35 @@ class WhyTrail:
         rounds = 1
         supported = [h for h, v in verdicts.items() if v["verdict"] == "supported"]
         attribution: list[dict[str, Any]] = []
+        followups: list[dict[str, Any]] = []
         if supported:
-            # 4. Skeptic challenges every supported hypothesis; Retriever runs the follow-up
+            # 4. Skeptic challenges every supported hypothesis and names the follow-up test for each challenge
+            #    (from Q.FOLLOWUP_TESTS); the Retriever runs exactly the tests requested.
             rounds = 2
 
             def v_sk(p):
                 assert isinstance(p["challenges"], list)
 
             sk = self._ask("skeptic", "Challenge these supported hypotheses.",
-                           {"supported": supported,
+                           {"supported": supported, "followup_catalog": Q.FOLLOWUP_TESTS,
                             "context": self.ctx.build("challenge", "Skeptic", [f"hyp:{h}" for h in supported])}, v_sk)
             self.t.event("Skeptic", "request_followup", output_summary=f"{len(sk['challenges'])} challenges",
                          target_agent="Retriever", challenges=sk["challenges"])
-            attribution = self._attribution(q, ents)
+            requested = self._requested_followups(sk["challenges"])
+            for test in requested:
+                if test == "baseline_variation":
+                    fu = self._baseline_variation(q, ents, metric_a, metric_b)
+                    followups.append(fu)
+                    self.t.event("Skeptic", "followup_executed", input_summary=test, output_summary=fu["summary"],
+                                 status="needs_revision" if fu["within_ordinary_variation"] else "success",
+                                 target_agent="Retriever", fact_ids=fu["fact_ids"])
+                else:  # isolate_daytype
+                    attribution = self._attribution(q, ents)
+                    self.t.event("Skeptic", "followup_executed", input_summary=test,
+                                 output_summary=f"day-type attribution: {', '.join(c['daytype'] for c in attribution)}",
+                                 target_agent="Retriever", fact_ids=attribution[0]["fact_ids"] if attribution else [])
+            if not attribution:
+                attribution = self._attribution(q, ents)  # the answer needs the attribution even when not requested
             for h in supported:
                 daytype = {"H_weather": "snow", "H_holiday": "holiday"}.get(h)
                 if not daytype:
@@ -297,7 +318,7 @@ class WhyTrail:
         if not attribution:
             attribution = self._attribution(q, ents)
 
-        # 5. Verifier: independent re-derivation of every number the Writer will cite
+        # 5. Verifier: independent re-derivation of the two headline totals (period A, period B)
         checks = self._verify(q, ents, {"metric_a": metric_a, "metric_b": metric_b})
         bad = [c for c in checks if not c["ok"]]
         if bad:
@@ -311,11 +332,12 @@ class WhyTrail:
         refuted += [f"{h} (ruled out in an earlier run, memory {mid})" for h, mid in skipped.items()]
         supported = [h for h, v in verdicts.items() if v["verdict"] == "supported"]
         explained = sum(c["share_pct"] for c in attribution if c["daytype"] != "other")
-        confidence = round(min(0.95, max(0.1, explained / 100)) * (0.5 if bad else 1.0), 2)
+        ordinary = any(fu["within_ordinary_variation"] for fu in followups)
+        confidence = round(min(0.95, max(0.1, explained / 100)) * (0.5 if bad else 1.0) * (0.7 if ordinary else 1.0), 2)
         result = {
             "question": q.text, "segment": q.segment, "period_a": str(q.period_a), "period_b": str(q.period_b),
             "metric_a": metric_a, "metric_b": metric_b, "change_pct": round(change, 2),
-            "supported": supported, "refuted": refuted, "attribution": attribution,
+            "supported": supported, "refuted": refuted, "attribution": attribution, "skeptic_followups": followups,
             "confidence": confidence, "verification": checks, "rounds": rounds,
             "falsifier": ("ordinary (non-holiday, dry) days in period B showed a drop of similar size, or the fare per "
                           "trip rose, or another borough without snow dropped just as much."),
@@ -323,7 +345,7 @@ class WhyTrail:
         writer_ctx = self.ctx.build("write_answer", "Writer")
         answer = self._ask("writer", f"Question: {q.text}", {"result": result, "world": writer_ctx},
                            lambda s: (isinstance(s, str) and len(s) > 20) or _raise(ValueError("empty answer")))
-        trail = self._trail(verdicts, attribution, checks)
+        trail = self._trail(verdicts, attribution, checks, followups)
 
         # 6. mine H-MEM (verdicts + outcome); persisted for the next run's Planner
         for h, v in verdicts.items():
@@ -403,6 +425,43 @@ class WhyTrail:
             out.append(g)
         return sorted(out, key=lambda g: -g["lost_trips"])
 
+    def _requested_followups(self, challenges: list[dict[str, Any]]) -> list[str]:
+        """Follow-up tests named by the Skeptic, deduplicated, restricted to the catalog."""
+        requested: list[str] = []
+        for c in challenges:
+            test = c.get("test") if isinstance(c, dict) else None
+            if test not in Q.FOLLOWUP_TESTS:
+                self.t.event("Skeptic", "followup_rejected", input_summary=str(test),
+                             output_summary=f"{test!r} is not in the follow-up catalog; running isolate_daytype instead",
+                             status="skipped")
+                test = "isolate_daytype"
+            if test not in requested:
+                requested.append(test)
+        return requested
+
+    def _baseline_variation(self, q: Question, ents: dict, metric_a: float, metric_b: float) -> dict[str, Any]:
+        """Skeptic follow-up: compare the A->B change with the change into A from the period just before it."""
+        n = len(q.period_a.days())
+        a0 = date.fromisoformat(q.period_a.start)
+        prev = Period((a0 - timedelta(days=n)).isoformat(), (a0 - timedelta(days=1)).isoformat())
+        ent = f"period:{prev}"
+        self.world.upsert_entity(ent, "period")
+        _, f = self._q("Retriever", "metric", "metric_total", [ents["metric"], ents["seg"], ent],
+                       seg=q.segment, start=prev.start, end=prev.end)
+        change = (metric_b - metric_a) / metric_a * 100
+        out: dict[str, Any] = {"test": "baseline_variation", "baseline_period": str(prev), "baseline_total": f.value,
+                               "change_pct": round(change, 2), "fact_ids": [f.id]}
+        if not f.value:
+            out.update(baseline_change_pct=None, within_ordinary_variation=False,
+                       summary=f"no {Q.TAXI} rows for {q.segment} in {prev}; ordinary variation could not be measured")
+            return out
+        base_change = (metric_a - f.value) / f.value * 100
+        within = abs(change) <= abs(base_change)
+        out.update(baseline_change_pct=round(base_change, 2), within_ordinary_variation=within,
+                   summary=(f"{q.segment} moved {base_change:+.1f}% from {prev} into period A and {change:+.1f}% into "
+                            f"period B: the change is {'within' if within else 'larger than'} ordinary variation"))
+        return out
+
     def _verify(self, q: Question, ents: dict, cited: dict[str, float]) -> list[dict[str, Any]]:
         checks = []
         for key, period, ent in (("metric_a", q.period_a, ents["A"]), ("metric_b", q.period_b, ents["B"])):
@@ -415,7 +474,8 @@ class WhyTrail:
                          f"{'ok' if ok else 'MISMATCH'}", status="success" if ok else "needs_revision")
         return checks
 
-    def _trail(self, verdicts: dict, attribution: list, checks: list) -> list[dict[str, Any]]:
+    def _trail(self, verdicts: dict, attribution: list, checks: list,
+               followups: list | None = None) -> list[dict[str, Any]]:
         trail = []
         for h, v in verdicts.items():
             facts = [self.world.facts[i] for i in v["fact_ids"]]
@@ -427,6 +487,10 @@ class WhyTrail:
             trail.append({"step": f"attribution:{c['daytype']}", "claim": f"{c['daytype']} days: {c['lost_trips']:,} lost trips "
                           f"({c['share_pct']}%)", "because": "weekday-matched comparison, federated join "
                           "NY_TAXI x NOAA_GHCN x REF", "evidence": c["fact_ids"]})
+        for fu in followups or []:
+            trail.append({"step": f"skeptic:{fu['test']}", "claim": fu["summary"],
+                          "because": f"Skeptic requested {fu['test']}; baseline {fu['baseline_period']}",
+                          "evidence": fu["fact_ids"]})
         for c in checks:
             trail.append({"step": f"verify:{c['claim']}", "claim": f"{c['cited']:,.0f}",
                           "because": f"re-derived {c['recomputed']:,.0f} from raw rows -> {'ok' if c['ok'] else 'mismatch'}",
