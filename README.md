@@ -324,6 +324,8 @@ None. All code was written after the build window opened (2026-10-22 00:00 UTC).
 - Slide deck: `docs/deck/WhyTrail-deck.pdf` (source `docs/deck/index.html`, 9 slides, 16:9; export with
   `chrome --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/deck/WhyTrail-deck.pdf file:///<repo>/docs/deck/index.html`)
 - Repo: https://github.com/run58669-maker/whytrail
+- Demo video (3:50): https://github.com/run58669-maker/whytrail/releases/download/v0.1-submission/WhyTrail-demo.mp4
+- Release: https://github.com/run58669-maker/whytrail/releases/tag/v0.1-submission
 - Metadata: [`metadata.json`](metadata.json)
 
 ## License
