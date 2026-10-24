@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhyTrail Deck</title>
+<!--
+  WhyTrail slide deck. Open Agent Hackathon 2026 (GenAI Works), Track 02: The Agent That Can Explain Why.
+  9 slides, 16:9 at 1280x720. Export: chrome --headless=new --print-to-pdf (see README "Submission").
+  Speaker notes are the HTML comments that start each <section>.
+  All numbers come from examples/run5_live_zetaris_claude.txt (run-b5402d4e, 2026-10-22), README.md and metadata.json.
+-->
+<style>
+  :root{
+    --bg:#fbfaf7; --ink:#1b1b1f; --muted:#5b5f6a; --line:#d9d6ce;
+    --accent:#b4461c; --accent-soft:#f6e3d8; --ok:#1f7a4d; --no:#a3242b;
+    --panel:#f1efe9; --code-bg:#1f2126; --code-ink:#e6e4de;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .slide{width:1280px;height:720px;overflow:hidden;position:relative;background:var(--bg);
+    padding:56px 72px 48px;display:flex;flex-direction:column;break-after:page;page-break-after:always;break-inside:avoid}
+  .slide:last-of-type{break-after:auto;page-break-after:auto}
+  .kicker{font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 10px}
+  h1{font-size:44px;line-height:1.12;margin:0 0 22px;font-weight:700;letter-spacing:-.01em}
+  h1 small{display:block;font-size:22px;font-weight:400;color:var(--muted);margin-top:10px;letter-spacing:0}
+  h2{font-size:20px;margin:0 0 8px;font-weight:700}
+  p,li{font-size:21px;line-height:1.4}
+  p{margin:0 0 12px}
+  ul{margin:0;padding-left:26px}
+  li{margin:0 0 9px}
+  li::marker{color:var(--accent)}
+  b{font-weight:700}
+  .cols{display:flex;gap:40px;flex:1;min-height:0}
+  .col{flex:1;min-width:0}
+  .foot{position:absolute;left:72px;right:72px;bottom:22px;display:flex;justify-content:space-between;
+    font-size:13px;color:var(--muted)}
+  .num{position:absolute;right:72px;top:26px;font-size:13px;color:var(--muted)}
+  code,pre{font-family:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
+  code{font-size:.92em;background:var(--panel);padding:1px 5px;border-radius:4px}
+  pre{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:16px 18px;
+    font-size:14.5px;line-height:1.38;white-space:pre;overflow:hidden}
+  pre .ok{color:#7fd39a} pre .no{color:#ff9a9a} pre .hl{color:#ffd27a} pre .dim{color:#9a9ea8}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 22px}
+  .tag{display:inline-block;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+    border-radius:999px;padding:2px 10px;margin-left:8px;vertical-align:middle}
+  .stat{display:flex;gap:28px;margin-top:6px}
+  .stat div{flex:1;background:var(--panel);border-radius:10px;padding:14px 18px}
+  .stat .v{font-size:34px;font-weight:700;letter-spacing:-.01em}
+  .stat .l{font-size:14px;color:var(--muted);margin-top:2px}
+  .cover{justify-content:center}
+  .cover h1{font-size:64px;margin-bottom:14px}
+  .cover .tagline{font-size:28px;color:var(--muted);max-width:980px;margin-bottom:38px}
+  .cover .meta{font-size:18px;color:var(--muted);line-height:1.7}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:22px 40px}
+  .lim li{font-size:17px;margin-bottom:7px}
+  .dense p,.dense li{font-size:18px;line-height:1.35}
+  .dense li{margin-bottom:7px}
+  .dense h2{font-size:18px}
+  svg text{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  @media screen{
+    body{padding:24px 0;background:#e7e5df}
+    .slide{margin:0 auto 24px;box-shadow:0 4px 24px rgba(0,0,0,.14)}
+  }
+  @page{size:1280px 720px;margin:0}
+  @media print{
+    body{padding:0;background:var(--bg)}
+    .slide{margin:0;box-shadow:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- SPEAKER NOTES, slide 1 (cover): WhyTrail. Track 02, The Agent That Can Explain Why. One builder, Wei Fang Solo.
+     Everything in this deck is reproducible from the repository; sample mode needs no credentials. -->
+<section class="slide cover">
+  <p class="kicker">Open Agent Hackathon 2026 &middot; Track 02: The Agent That Can Explain Why</p>
+  <h1>WhyTrail</h1>
+  <p class="tagline">An agent that explains why a metric changed, and shows the query behind every number.</p>
+  <p class="meta">
+    Team: Wei Fang Solo (one builder)<br>
+    Sponsor tech: Zetaris Lightning SQL (every fact) &middot; Meterless World Model + H-MEM (all state) &middot; Claude (judgement) &middot; built in Cursor<br>
+    github.com/run58669-maker/whytrail &middot; Apache-2.0 &middot; <code>python -m whytrail --mock</code> runs offline in seconds
+  </p>
+  <div class="foot"><span>WhyTrail</span><span>1 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 2: Our target user is an operations or BI analyst who gets "why did X change?" questions and
+     is expected to answer with evidence, not a hunch. The data is federated across sources never designed to be
+     joined. A chat assistant produces a plausible story; the analyst then spends the afternoon checking whether the
+     story is true. We built the agent that does the checking first. -->
+<section class="slide">
+  <p class="kicker">Problem &amp; target users</p>
+  <h1>"Why did the number change?" is the question nobody can answer with evidence</h1>
+  <div class="cols">
+    <div class="col">
+      <ul>
+        <li>Operations analyst, Monday morning: <b>"Manhattan taxi trips dropped last week. Why?"</b></li>
+        <li>The answer lives in three places that do not share a schema: <b>trip data, weather, calendar</b>.</li>
+        <li>Today's options: a dashboard that shows <i>that</i> it dropped, or an LLM that <i>guesses</i> why.</li>
+        <li>Neither shows the query behind the number. Neither can be audited.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h2>Target user</h2>
+        <p>Operations / BI analysts who must answer "why" with numbers someone else can check: SQL, source tables, row counts.</p>
+        <h2>What they need</h2>
+        <p>Competing explanations tested against the data, the losers shown as well as the winner, and every figure traceable to a query.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail</span><span>2 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 3: The core idea is borrowed from how a careful analyst works, not from how a chatbot works.
+     Explanations are hypotheses with a test that could prove them wrong. The model chooses and challenges hypotheses
+     and writes prose; all numbers come from code paths that never touch model text. The output is an answer plus a
+     "why-trail": what was tested, what was refuted, and the evidence IDs. -->
+<section class="slide">
+  <p class="kicker">Solution</p>
+  <h1>Falsification-first: try to kill every explanation before you believe one</h1>
+  <div class="cols">
+    <div class="col">
+      <p>WhyTrail does not ask the model "why?". It asks the data <b>"which explanations survive?"</b></p>
+      <ul>
+        <li><b>1. List competing hypotheses</b>: holiday, weather, price, data gap, local-vs-citywide.</li>
+        <li><b>2. Run a query designed to refute</b> each one (Zetaris, federated).</li>
+        <li><b>3. A Skeptic attacks the survivors</b>: it names a follow-up test from a fixed catalog and the orchestrator runs exactly that test.</li>
+        <li><b>4. A Verifier re-derives the two headline totals</b> through an independent Zetaris query; a mismatch blocks the answer.</li>
+        <li><b>5. Only then is the answer written</b>, and every figure links to a fact: SQL, source tables, row count, result hash.</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:.8">
+      <div class="panel">
+        <h2>Output = answer + why-trail</h2>
+        <p>The prose answer, the list of hypotheses with <span style="color:var(--ok);font-weight:700">supported</span> / <span style="color:var(--no);font-weight:700">refuted</span> verdicts, the Skeptic's follow-up result, the Verifier lines, and an evidence ID per claim.</p>
+        <p style="margin:0"><code>f_b668b44f81</code> &rarr; SQL + tables + rows + hash in <code>logs/world-&lt;run&gt;.jsonl</code></p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail</span><span>3 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 4: The loop has real back-edges. The Skeptic sends work back to the Retriever; the Verifier
+     can block the Writer and replace a number. Memory changes the Planner's behaviour on the next run. Every step
+     writes a line to logs/trace-<run_id>.jsonl with agent name, action, fact ID and elapsed time. -->
+<section class="slide">
+  <p class="kicker">Agent workflow / architecture</p>
+  <h1>Six agents in a bounded loop, not a fixed chain</h1>
+  <div class="cols">
+    <div class="col" style="flex:1.6">
+      <pre style="font-size:13.5px">question &rarr; <span class="hl">Orchestrator</span> (bounded state machine, JSONL trace)
+  H-MEM hydrate (Meterless) &rarr; <span class="hl">Planner</span>: hypotheses, each with a falsifying test
+  <span class="hl">Retriever</span>: SQL templates &rarr; Zetaris REST &rarr; World Model (provenance per fact)
+  <span class="hl">Analyst</span>: deterministic verdict per hypothesis (<span class="ok">supported</span> / <span class="no">refuted</span>)
+  <span class="hl">Skeptic</span>: strongest alternative + follow-up test from FOLLOWUP_TESTS
+       isolate_daytype    : federated join NY_TAXI x NOAA_GHCN x REF, weekday-matched
+       baseline_variation : total of the period before A; ordinary variation?
+       &rarr; back to Retriever; a failed hypothesis is downgraded: needs_revision
+  <span class="hl">Verifier</span>: second Zetaris query re-derives the two headline totals (A, B);
+       a mismatch blocks the Writer and replaces the number
+  <span class="hl">Writer</span>: answer + why-trail from World Model payloads only
+  H-MEM mine: verdicts persisted for the next run</pre>
+    </div>
+    <div class="col dense" style="flex:.9">
+      <ul>
+        <li><b>Planner, Skeptic, Writer</b> call the model through <b>one injected generator</b>.</li>
+        <li><b>Retriever, Analyst, Verifier</b> are plain code: numbers never come from model text.</li>
+        <li>Real back-edges: Skeptic &rarr; Retriever; Verifier can block the Writer; H-MEM changes the next Planner run.</li>
+        <li>Every step is a line in <code>logs/trace-&lt;run_id&gt;.jsonl</code>: agent, action, fact ID, elapsed time.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail</span><span>4 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 5: Zetaris is load-bearing: every piece of evidence, including the Verifier's independent
+     re-check, is a Zetaris query. Sample mode serves the same qualified table names from SQLite attached under the
+     source names, so the identical SQL runs offline for judges without credentials. The two Meterless engines are the
+     only places state lives; agents read and write them through the interfaces in the Meterless engine documents. -->
+<section class="slide">
+  <p class="kicker">Technical stack &middot; how Zetaris and Meterless were used</p>
+  <h1 style="font-size:36px;margin-bottom:14px">Zetaris for every fact, Claude for judgement, Meterless engines for state</h1>
+  <div class="two dense" style="gap:12px 36px">
+    <div>
+      <h2>Zetaris Lightning SQL <span class="tag">data harness</span></h2>
+      <ul>
+        <li>Direct REST API <code>POST /api/v1.0/sql-editor/sqls/run</code>: bearer key, <code>X-Org-ID</code>, UUID request IDs, one statement per call.</li>
+        <li>Three sources with qualified names: <code>NY_TAXI.taxi_daily</code>, <code>NOAA_GHCN.central_park_daily</code>, <code>REF.us_holidays</code>; the Skeptic's <code>isolate_daytype</code> test is a federated join across all three.</li>
+        <li>Dataset reproducible from <code>scripts/zetaris/</code> (export, clean, register).</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Meterless <span class="tag">agent engines, in-repo</span></h2>
+      <ul>
+        <li><b>World Model</b>: WorldStore, IngestPipeline (idempotent, provenance), ContextBuilder. Evidence ledger: written by Retriever/Analyst/Verifier, read by Skeptic/Writer.</li>
+        <li><b>H-MEM</b>: MemoryStore (layers, supersede, persist), MemoryRetrieval (hybrid score, retrievalReason). Schema facts + verdicts across runs; read by the Planner.</li>
+        <li>Engines never call a model.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Claude</h2>
+      <ul>
+        <li><code>claude-opus-5-5</code> via the Anthropic SDK behind one injected generator; deterministic mock generator for offline sample mode.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Runtime &amp; tooling</h2>
+      <ul>
+        <li>Python 3.11+, CLI <code>python -m whytrail</code> and HTTP <code>POST /run</code>, Dockerfile, <b>21 unit tests</b>, <code>SAMPLE_MODE=true</code> fallback.</li>
+        <li>Built in <b>Cursor</b> (<code>.cursor/rules/whytrail.mdc</code>; Cursor commits tagged <code>[cursor]</code>).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail</span><span>5 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 6: This is the recorded run against a local Zetaris instance in Docker with live Claude, on
+     the real NY_TAXI sample aggregated by day and borough (2024-04-01 to 2025-02-28), NOAA GHCN-Daily Central Park
+     weather and the US federal holiday list. The intuitive answer, weather, is refuted by the data: the snow was in
+     the earlier week. The holiday hypothesis survives the Skeptic's weekday-matched attribution, and both headline
+     totals are re-derived from raw rows. Twenty queries and about six cents. -->
+<section class="slide">
+  <p class="kicker">Product visuals &middot; live run on real data (run-b5402d4e, 2026-10-22)</p>
+  <h1 style="font-size:36px;margin-bottom:14px">MLK week, &minus;1.42%: the holiday explains 100%, weather is refuted</h1>
+  <div class="cols" style="gap:28px">
+    <div class="col" style="flex:1.6">
+<pre style="font-size:12.5px;line-height:1.36;padding:12px 14px"><span class="dim">$ python -m whytrail --memory .whytrail/hmem-live.json --reset-memory --max-cost 0.5
+[INFO] run-b5402d4e Orchestrator.parse: segment=Manhattan A=2025-01-13.. B=2025-01-20..
+[INFO] run-b5402d4e Analyst.verdict: supported: holidays in period: 0 -> 1
+[INFO] run-b5402d4e Analyst.verdict: refuted: snow 41mm -> 0mm, precipitation 9mm -> 0mm
+[INFO] run-b5402d4e Skeptic.request_followup: 1 challenges
+[INFO] run-b5402d4e Verifier.check: metric_a: cited 758,672 vs re-derived 758,672 -> ok
+[INFO] run-b5402d4e Verifier.check: metric_b: cited 747,921 vs re-derived 747,921 -> ok</span>
+
+<span class="hl">=== WhyTrail answer ===</span>
+Manhattan taxi trips fell 1.42%, from 758,672 in the week of 2025-01-13 to 747,921
+in the week of 2025-01-20. The drop is explained by Martin Luther King Jr. Day on
+2025-01-20, which had only 71,364 trips compared with 88,147 the Monday before, a
+loss of 16,783 trips. The other six days of the holiday week actually gained 6,032
+trips combined, so the holiday accounts for 100% of the decline (confidence 0.95).
+
+<span class="hl">=== why-trail ===</span>
+- H_holiday  -> <span class="ok">supported</span>: holidays 0 -> 1; follow-up: holiday days explain 100%
+                            [evidence f_b668b44f81, f_75f1825a48]
+- H_weather  -> <span class="no">refuted</span>: snow 41mm -> 0mm         [evidence f_60fc69bd8d, f_4858832554]
+- H_data_gap -> <span class="no">refuted</span>: days with data 7 -> 7    [evidence f_9457ecdef0, f_34ab0fd871]
+- H_price    -> <span class="no">refuted</span>: fare $13.87 -> $13.72    [evidence f_a9d5a89340, f_e4dd8bb6be]
+- H_local    -> <span class="no">refuted</span>: Manhattan -1.4% vs others +8.5%  [f_ef7be50d2f, f_52495cef71]
+- verify:metric_a: 758,672 | re-derived 758,672 from raw rows -> <span class="ok">ok</span>  [f_0203d716c5]
+- verify:metric_b: 747,921 | re-derived 747,921 from raw rows -> <span class="ok">ok</span>  [f_cf3eb3b025]
+
+zetaris_queries=20 model_calls=3 cost=$0.0565 world_facts=20 hmem_records=7 seconds=34.28
+<span class="dim">$ python -m whytrail --quiet "Why did Manhattan taxi trips drop in the week of 2024-01-15 ..."</span>
+<span class="no">ERROR NoDataError</span>: no NY_TAXI.taxi_daily rows for Manhattan in 2024-01-08..2024-01-14 and
+2024-01-15..2024-01-21; available data: 2024-04-01..2025-02-28. Ask about weeks inside that range.</pre>
+    </div>
+    <div class="col" style="flex:.5;display:flex;flex-direction:column;gap:12px">
+      <div class="stat" style="flex-direction:column;gap:10px;margin:0">
+        <div style="padding:10px 16px"><div class="v">20</div><div class="l">Zetaris queries, incl. 2 Verifier re-checks</div></div>
+        <div style="padding:10px 16px"><div class="v">3</div><div class="l">Claude calls: Planner, Skeptic, Writer</div></div>
+        <div style="padding:10px 16px"><div class="v" style="font-size:28px">34.3 s &middot; $0.0565</div><div class="l">wall time and model cost for the run</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail &middot; transcript: examples/run5_live_zetaris_claude.txt &middot; trace: logs/trace-run-b5402d4e.jsonl</span><span>6 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 7: The diagram: Claude is only reachable through the injected generator used by Planner,
+     Skeptic and Writer. Zetaris is the only data path; three sources, one REST endpoint, federated SQL. The Meterless
+     engines hold all state: the World Model is the evidence ledger, H-MEM is cross-run memory. Every step also lands
+     in the JSONL trace, which is how the why-trail is audited after the fact. -->
+<section class="slide">
+  <p class="kicker">Product visuals &middot; architecture</p>
+  <h1 style="font-size:36px;margin-bottom:10px">Claude agents &harr; Zetaris Lightning SQL &harr; Meterless engines, with the why-trail store</h1>
+  <svg viewBox="0 0 1136 520" width="1136" height="520" role="img" aria-label="WhyTrail architecture diagram">
+    <defs>
+      <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#5b5f6a"/>
+      </marker>
+    </defs>
+    <!-- Claude / model column -->
+    <rect x="20" y="40" width="250" height="300" rx="12" fill="#f6e3d8" stroke="#b4461c" stroke-width="2"/>
+    <text x="145" y="72" text-anchor="middle" font-size="19" font-weight="700" fill="#b4461c">Claude (claude-opus-5-5)</text>
+    <text x="145" y="96" text-anchor="middle" font-size="14" fill="#5b5f6a">one injected generator</text>
+    <rect x="45" y="118" width="200" height="50" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="145" y="140" text-anchor="middle" font-size="16" font-weight="700">Planner</text>
+    <text x="145" y="158" text-anchor="middle" font-size="12.5" fill="#5b5f6a">picks hypotheses + tests</text>
+    <rect x="45" y="184" width="200" height="50" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="145" y="206" text-anchor="middle" font-size="16" font-weight="700">Skeptic</text>
+    <text x="145" y="224" text-anchor="middle" font-size="12.5" fill="#5b5f6a">names follow-up test from catalog</text>
+    <rect x="45" y="250" width="200" height="50" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="145" y="272" text-anchor="middle" font-size="16" font-weight="700">Writer</text>
+    <text x="145" y="290" text-anchor="middle" font-size="12.5" fill="#5b5f6a">prose from World Model payloads</text>
+    <text x="145" y="326" text-anchor="middle" font-size="12.5" fill="#5b5f6a">never sees raw numbers as truth</text>
+
+    <!-- Orchestrator / code column -->
+    <rect x="330" y="40" width="300" height="300" rx="12" fill="#f1efe9" stroke="#5b5f6a" stroke-width="2"/>
+    <text x="480" y="72" text-anchor="middle" font-size="19" font-weight="700">Orchestrator (plain code)</text>
+    <text x="480" y="96" text-anchor="middle" font-size="14" fill="#5b5f6a">bounded state machine, structured errors</text>
+    <rect x="355" y="118" width="250" height="50" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="480" y="140" text-anchor="middle" font-size="16" font-weight="700">Retriever</text>
+    <text x="480" y="158" text-anchor="middle" font-size="12.5" fill="#5b5f6a">restricted SQL templates + follow-ups</text>
+    <rect x="355" y="184" width="250" height="50" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="480" y="206" text-anchor="middle" font-size="16" font-weight="700">Analyst</text>
+    <text x="480" y="224" text-anchor="middle" font-size="12.5" fill="#5b5f6a">deterministic supported / refuted</text>
+    <rect x="355" y="250" width="250" height="50" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="480" y="272" text-anchor="middle" font-size="16" font-weight="700">Verifier</text>
+    <text x="480" y="290" text-anchor="middle" font-size="12.5" fill="#5b5f6a">re-derives totals A and B, blocks Writer</text>
+
+    <!-- Zetaris column -->
+    <rect x="700" y="40" width="416" height="180" rx="12" fill="#e3ecf6" stroke="#2d5c8f" stroke-width="2"/>
+    <text x="908" y="72" text-anchor="middle" font-size="19" font-weight="700" fill="#2d5c8f">Zetaris Lightning SQL</text>
+    <text x="908" y="96" text-anchor="middle" font-size="14" fill="#5b5f6a">REST  POST /api/v1.0/sql-editor/sqls/run  (local Docker instance)</text>
+    <rect x="720" y="118" width="120" height="76" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="780" y="146" text-anchor="middle" font-size="13.5" font-weight="700">NY_TAXI</text>
+    <text x="780" y="166" text-anchor="middle" font-size="12" fill="#5b5f6a">taxi_daily</text>
+    <text x="780" y="182" text-anchor="middle" font-size="11" fill="#5b5f6a">2,002 rows</text>
+    <rect x="848" y="118" width="120" height="76" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="908" y="146" text-anchor="middle" font-size="13.5" font-weight="700">NOAA_GHCN</text>
+    <text x="908" y="166" text-anchor="middle" font-size="12" fill="#5b5f6a">central_park_daily</text>
+    <text x="908" y="182" text-anchor="middle" font-size="11" fill="#5b5f6a">402 rows</text>
+    <rect x="976" y="118" width="120" height="76" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="1036" y="146" text-anchor="middle" font-size="13.5" font-weight="700">REF</text>
+    <text x="1036" y="166" text-anchor="middle" font-size="12" fill="#5b5f6a">us_holidays</text>
+    <text x="1036" y="182" text-anchor="middle" font-size="11" fill="#5b5f6a">22 rows</text>
+
+    <!-- Meterless column -->
+    <rect x="700" y="250" width="416" height="150" rx="12" fill="#e6f1ea" stroke="#1f7a4d" stroke-width="2"/>
+    <text x="908" y="282" text-anchor="middle" font-size="19" font-weight="700" fill="#1f7a4d">Meterless engines (in-repo, no model calls)</text>
+    <rect x="720" y="302" width="190" height="80" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="815" y="326" text-anchor="middle" font-size="15" font-weight="700">World Model</text>
+    <text x="815" y="346" text-anchor="middle" font-size="12" fill="#5b5f6a">WorldStore, IngestPipeline,</text>
+    <text x="815" y="362" text-anchor="middle" font-size="12" fill="#5b5f6a">ContextBuilder: evidence ledger</text>
+    <rect x="926" y="302" width="170" height="80" rx="8" fill="#fbfaf7" stroke="#d9d6ce"/>
+    <text x="1011" y="326" text-anchor="middle" font-size="15" font-weight="700">H-MEM</text>
+    <text x="1011" y="346" text-anchor="middle" font-size="12" fill="#5b5f6a">MemoryStore, MemoryRetrieval:</text>
+    <text x="1011" y="362" text-anchor="middle" font-size="12" fill="#5b5f6a">schema + verdicts across runs</text>
+
+    <!-- Trace store -->
+    <rect x="330" y="420" width="786" height="70" rx="12" fill="#1f2126"/>
+    <text x="723" y="449" text-anchor="middle" font-size="17" font-weight="700" fill="#e6e4de">Why-trail / trace store</text>
+    <text x="723" y="474" text-anchor="middle" font-size="13.5" fill="#9a9ea8">logs/trace-&lt;run_id&gt;.jsonl (agent, action, fact ID, elapsed)  &middot;  logs/world-&lt;run_id&gt;.jsonl (SQL, tables, row count, hash per fact)</text>
+
+    <!-- Arrows -->
+    <line x1="270" y1="143" x2="330" y2="143" stroke="#5b5f6a" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="330" y1="209" x2="270" y2="209" stroke="#5b5f6a" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="270" y1="222" x2="330" y2="222" stroke="#5b5f6a" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="330" y1="275" x2="270" y2="275" stroke="#5b5f6a" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="300" y="130" text-anchor="middle" font-size="11.5" fill="#5b5f6a">plan</text>
+    <text x="300" y="240" text-anchor="middle" font-size="11.5" fill="#5b5f6a">follow-up</text>
+
+    <line x1="630" y1="130" x2="700" y2="130" stroke="#2d5c8f" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line x1="700" y1="156" x2="630" y2="156" stroke="#2d5c8f" stroke-width="2.5" marker-end="url(#arr)"/>
+    <text x="665" y="120" text-anchor="middle" font-size="11.5" fill="#2d5c8f">SQL</text>
+    <text x="665" y="172" text-anchor="middle" font-size="11.5" fill="#2d5c8f">rows</text>
+    <line x1="630" y1="262" x2="700" y2="190" stroke="#2d5c8f" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr)"/>
+    <text x="690" y="212" text-anchor="end" font-size="11" fill="#2d5c8f">Verifier 2nd query</text>
+
+    <line x1="630" y1="300" x2="700" y2="330" stroke="#1f7a4d" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line x1="700" y1="352" x2="630" y2="322" stroke="#1f7a4d" stroke-width="2.5" marker-end="url(#arr)"/>
+    <text x="665" y="302" text-anchor="middle" font-size="11.5" fill="#1f7a4d">facts</text>
+    <text x="668" y="350" text-anchor="middle" font-size="11.5" fill="#1f7a4d">context</text>
+    <text x="145" y="376" text-anchor="middle" font-size="12.5" fill="#1f7a4d">H-MEM hydrate -> Planner: 20 queries cold, 10 warm</text>
+
+    <line x1="480" y1="340" x2="480" y2="420" stroke="#5b5f6a" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="908" y1="400" x2="908" y2="420" stroke="#5b5f6a" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="500" y="385" text-anchor="start" font-size="11.5" fill="#5b5f6a">every step</text>
+  </svg>
+  <div class="foot"><span>WhyTrail</span><span>7 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 8: Many "explain why" agents retrieve, then ask the model to reason over the retrieved text.
+     We inverted it: the model proposes what could be false, Zetaris decides. The Verifier closing the loop on Zetaris
+     with a differently shaped query is the part we think is unusual. On Meterless, the engines are not decoration:
+     without H-MEM the second run would repeat ten queries it no longer needs. Honest limits: the hypothesis catalog is
+     fixed, SQL is restricted to templates on three tables, one domain, synthetic sample data, the Verifier covers the
+     two headline totals only, NVIDIA not used yet, and one recorded live run, made before the follow-up catalog existed. -->
+<section class="slide">
+  <p class="kicker">Innovation &middot; what was unique about our sponsor use &middot; honest limits</p>
+  <h1 style="font-size:36px">The model proposes what could be false; Zetaris decides</h1>
+  <div class="cols dense" style="gap:32px">
+    <div class="col" style="flex:1.1">
+      <ul>
+        <li><b>Evidence is a first-class object.</b> Every number in the answer resolves to a World Model fact with SQL, tables, row count and hash. No fact, no sentence.</li>
+        <li><b>Zetaris closes its own loop.</b> The two headline totals are queried twice with two formulations (template aggregate vs raw rows summed client-side); the Verifier is an independent reader of the same federated data.</li>
+        <li><b>The Skeptic's follow-up is itself a federated query</b>: NY_TAXI &times; NOAA_GHCN &times; REF, weekday-matched, inside Zetaris, not stitched in Python. The Skeptic names the test; the orchestrator runs exactly that and traces it.</li>
+        <li><b>H-MEM measurably changes behaviour</b>: same question twice in sample mode, <b>20 queries cold, 10 warm</b> (schema discovery skipped, refuted hypotheses cited from memory). <code>examples/run1_cold_memory.txt</code>, <code>run2_warm_memory.txt</code>.</li>
+        <li><b>Numbers never come from model text.</b></li>
+      </ul>
+    </div>
+    <div class="col panel lim" style="flex:.9;padding:14px 18px">
+      <h2 style="font-size:18px">Honest limits (kept consistent with the repo)</h2>
+      <ul>
+        <li>Fixed catalogs: 5 hypotheses, 2 follow-up tests (<code>isolate_daytype</code>, <code>baseline_variation</code>). The model chooses, it does not invent.</li>
+        <li>SQL restricted to templates on three tables; question parser fixed to taxi trips, a borough, two ISO-dated weeks.</li>
+        <li>Verifier re-derives the <b>two headline totals only</b>; other numbers carry provenance, not a re-derivation.</li>
+        <li>Sample mode = synthetic Jan 2024 data, not real TLC/NOAA. Live range 2024-04-01..2025-02-28; weather through 2025-02-05.</li>
+        <li>One recorded live run (run-b5402d4e), made before the follow-up catalog existed: its Skeptic asked for <code>isolate_daytype</code>, the only test then available.</li>
+        <li>NVIDIA not used yet. Cursor = dev environment, not runtime.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail</span><span>8 / 9</span></div>
+</section>
+
+<!-- SPEAKER NOTES, slide 9: Everything claimed in this deck is reproducible from the repository: sample mode needs no
+     credentials, live mode needs a Zetaris instance and an Anthropic key, both described in README and .env.example.
+     Thank you. -->
+<section class="slide">
+  <p class="kicker">Future enhancements &middot; links</p>
+  <h1>What's next, and where to find everything</h1>
+  <div class="cols dense">
+    <div class="col">
+      <h2>Next</h2>
+      <ul>
+        <li>Web UI for the why-trail (click a number, see its SQL and rows).</li>
+        <li>Route the Skeptic to <b>NVIDIA Nemotron</b> through the same injected generator.</li>
+        <li>Open the hypothesis and follow-up catalogs: model-proposed tests validated against the template grammar.</li>
+        <li>Extend the Verifier beyond the two headline totals.</li>
+        <li>Docker image test from a clean clone; more domains on the same three-source pattern.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="panel" style="padding:14px 20px">
+        <h2>Links</h2>
+        <p>Repo: <b>github.com/run58669-maker/whytrail</b> (Apache-2.0)</p>
+        <p>Run offline, no keys: <code>python -m whytrail --mock</code> (after <code>pip install -r requirements.txt</code>)</p>
+        <p>Tests: <code>python -m pytest</code> (21 tests, offline, ~2 s)</p>
+        <p>Live transcript: <code>examples/run5_live_zetaris_claude.txt</code><br>Trace: <code>logs/trace-run-b5402d4e.jsonl</code></p>
+        <p>Dataset reproduction: <code>scripts/zetaris/</code> &middot; Deck source: <code>docs/deck/index.html</code></p>
+        <p style="margin:0">Team: Wei Fang Solo &middot; Track 02 &middot; Pre-existing components: none (all code written after 2026-10-22 00:00 UTC)</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>WhyTrail</span><span>9 / 9</span></div>
+</section>
+
+</body>
+</html>

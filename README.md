@@ -281,7 +281,7 @@ Known limits: the Verifier re-derives the two headline totals only; the question
 borough and two ISO-dated periods; a model failure falls back to the offline generator and is marked `fallback` in the
 trace rather than failing the run.
 
-Next: web UI, NVIDIA Nemotron for the Skeptic, Docker image test, demo video, slide deck.
+Next: web UI, NVIDIA Nemotron for the Skeptic, Docker image test, demo video. Slide deck: see [Submission](#submission).
 
 ## How we built it
 
@@ -293,6 +293,13 @@ Next: web UI, NVIDIA Nemotron for the Skeptic, Docker image test, demo video, sl
 ## Pre-existing components
 
 None. All code was written after the build window opened (2026-10-22 00:00 UTC).
+
+## Submission
+
+- Slide deck: `docs/deck/WhyTrail-deck.pdf` (source `docs/deck/index.html`, 9 slides, 16:9; export with
+  `chrome --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/deck/WhyTrail-deck.pdf file:///<repo>/docs/deck/index.html`)
+- Repo: https://github.com/run58669-maker/whytrail
+- Metadata: [`metadata.json`](metadata.json)
 
 ## License
 
