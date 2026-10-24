@@ -186,7 +186,7 @@ Next: web UI, NVIDIA Nemotron for the Skeptic, Docker image test, demo video, sl
 ## How we built it
 
 - **Cursor** is the development environment ([`.cursor/rules/whytrail.mdc`](.cursor/rules/whytrail.mdc)); commits tagged
-  `[cursor]` were made by Cursor Agent, except the skeleton commit and a7c2a96, which Claude Code wrote from the terminal.
+  `[cursor]` were made by Cursor Agent, except the skeleton commit and c5b5ebe, which Claude Code wrote from the terminal.
 - Zetaris integration follows `zetaris/getting-started` (`docs/connections/client-setup.md`, `scripts/zetaris_sql.py`);
   Meterless engines follow the Meterless README and the World Model / H-MEM engine documents.
 
