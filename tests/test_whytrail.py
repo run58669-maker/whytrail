@@ -1,4 +1,5 @@
 import json
+import os
 
 import httpx
 import pytest
@@ -213,6 +214,7 @@ def test_cli_mock_data_default_question_in_mock_range(tmp_path, monkeypatch, cap
         return real_build(mock_data, True, memory, log_dir, echo=echo, max_cost=max_cost)  # force offline generator
 
     monkeypatch.setattr(cli, "build", fake_build)
+    monkeypatch.setattr(cli, "load_dotenv", lambda: {})  # do not pick up a developer's .env here
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("SAMPLE_MODE", raising=False)
     rc = cli.main(["--mock-data", "--quiet", "--memory", str(tmp_path / "hmem.json"), "--log-dir", str(tmp_path / "logs")])
@@ -221,6 +223,38 @@ def test_cli_mock_data_default_question_in_mock_range(tmp_path, monkeypatch, cap
     assert seen == {"mock_data": True, "mock_llm": False}
     assert "2024-01-15..2024-01-21" in out and "NoDataError" not in out
     assert default_question(False or True) == DEFAULT_SAMPLE_Q
+
+
+def test_dotenv_loader_sets_missing_keys_only(tmp_path, monkeypatch):
+    from whytrail import env
+
+    (tmp_path / ".env").write_text(
+        "# comment\n\nANTHROPIC_API_KEY=from-file\nexport ZETARIS_ORG_ID='7'\n"
+        'WHYTRAIL_MODEL="claude-haiku-5-5"\nSAMPLE_MODE=true # trailing comment\nnot a valid line\n',
+        encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    for k in ("ANTHROPIC_API_KEY", "ZETARIS_ORG_ID", "WHYTRAIL_MODEL", "SAMPLE_MODE"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "from-shell")
+    loaded = env.load_dotenv()
+    assert os.environ["ANTHROPIC_API_KEY"] == "from-shell"  # an exported variable is never overridden
+    assert os.environ["ZETARIS_ORG_ID"] == "7" and os.environ["WHYTRAIL_MODEL"] == "claude-haiku-5-5"
+    assert os.environ["SAMPLE_MODE"] == "true"
+    assert set(loaded) == {"ZETARIS_ORG_ID", "WHYTRAIL_MODEL", "SAMPLE_MODE"}
+    assert env.load_dotenv(tmp_path / "missing.env") == {}
+
+
+def test_cli_reads_dotenv_without_shell_source(tmp_path, monkeypatch, capsys):
+    # README Path B: `cp .env.example .env`, fill it in, run. The CLI itself must read the file.
+    (tmp_path / ".env").write_text("SAMPLE_MODE=true\nWHYTRAIL_MEMORY=mem-from-dotenv.json\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    for k in ("SAMPLE_MODE", "WHYTRAIL_MEMORY", "ANTHROPIC_API_KEY", "ZETARIS_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    from whytrail import __main__ as cli
+
+    rc = cli.main(["--quiet", "--log-dir", str(tmp_path / "logs")])
+    assert rc == 0 and "=== WhyTrail answer ===" in capsys.readouterr().out
+    assert (tmp_path / "mem-from-dotenv.json").exists()  # --memory default came from .env
 
 
 def test_skeptic_requested_followup_is_executed_and_traced(tmp_path):

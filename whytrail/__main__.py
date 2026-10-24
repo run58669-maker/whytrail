@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+from .env import load_dotenv
 from .generator import make_generator
 from .orchestrator import WhyTrail
 from .zetaris import make_client
@@ -26,6 +27,7 @@ def build(mock_data: bool, mock_llm: bool, memory: str | None, log_dir: str, ech
 
 
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv()  # .env in CWD or repo root; shell variables take precedence
     p = argparse.ArgumentParser(prog="whytrail", description="Explain why a metric changed, with an evidence trail.")
     p.add_argument("question", nargs="?", default=None)
     p.add_argument("--mock", action="store_true", help="offline: mock Zetaris data + mock generator (same as SAMPLE_MODE=true)")
