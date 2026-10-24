@@ -39,5 +39,5 @@ confidence=0.95  supported=['H_weather', 'H_holiday']
 - verify:metric_b: 554,691 | re-derived 554,691 from raw rows -> ok  [evidence f_3e4ec4f56f]
 
 zetaris_queries=10 model_calls=3 cost=$0.0 world_facts=10 hmem_records=8 seconds=0.06
-trace: logs\trace-run-ec097b94.jsonl
-world: logs\world-run-ec097b94.jsonl
+trace: logs/trace-run-ec097b94.jsonl
+world: logs/world-run-ec097b94.jsonl

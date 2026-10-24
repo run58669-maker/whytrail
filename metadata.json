@@ -9,7 +9,7 @@
   },
   "agents": ["Planner", "Retriever", "Analyst", "Skeptic", "Verifier", "Writer"],
   "sponsor_technology": {
-    "zetaris": "All evidence is read through Zetaris Lightning SQL over the direct REST API (POST /api/v1.0/sql-editor/sqls/run). Three sources (NY_TAXI, NOAA_GHCN, REF) are queried with qualified names, including a federated join across all three. The Verifier re-queries Zetaris independently to check every cited number. Status: REST client implemented and unit-tested against the documented request shape; live instance run pending (local Docker install).",
+    "zetaris": "All evidence is read through Zetaris Lightning SQL over the direct REST API (POST /api/v1.0/sql-editor/sqls/run). Three sources (NY_TAXI, NOAA_GHCN, REF) are queried with qualified names, including a federated join across all three. The Verifier re-queries Zetaris independently to check every cited number. Status: live end-to-end run done against a local Zetaris instance (Docker) with live Claude on real data (NY_TAXI.taxi_daily 2024-04-01..2025-02-28); trace in logs/trace-run-b5402d4e.jsonl, transcript in examples/run5_live_zetaris_claude.txt. REST client also unit-tested against the documented request shape.",
     "meterless": "Two engines implemented from the Meterless reference architectures: World Model (WorldStore + IngestPipeline + ContextBuilder) holds the evidence ledger with provenance and is read by Skeptic and Writer; H-MEM (MemoryStore + MemoryRetrieval) persists schema facts and hypothesis verdicts across runs and is read by the Planner. Both use an injected generator. JSONL evidence in logs/.",
     "cursor": "Development environment. Project rules for Cursor Agent live in .cursor/rules/whytrail.mdc. The first skeleton commit was written with Claude Code before the Cursor workspace was set up; Cursor-made commits are tagged [cursor].",
     "nvidia": "Not used yet. Planned: route the Skeptic role to NVIDIA Nemotron through the injected generator."
@@ -17,7 +17,7 @@
   "models": ["claude-opus-5-5 (default, via Anthropic SDK)", "offline mock generator for SAMPLE_MODE"],
   "data": {
     "sample_mode": "Synthetic January 2024 data shaped like NY_TAXI trip aggregates, NOAA GHCN-Daily Central Park weather and US federal holidays (whytrail/sample_data.py). Not real TLC/NOAA data.",
-    "live": "Zetaris built-in NY_TAXI sample, NOAA GHCN-Daily (CC0) registered as a Zetaris file source, holiday reference CSV."
+    "live": "Real data on a local Zetaris instance (Docker): NY_TAXI.taxi_daily (daily x borough aggregate built from the built-in NY_TAXI sample, 2024-04-01..2025-02-28), NOAA_GHCN.central_park_daily (NOAA GHCN-Daily, CC0, through 2025-02-05) registered as a Zetaris file source, REF.us_holidays (US federal holidays CSV). Live Zetaris + Claude end-to-end run completed (run-b5402d4e); see README 'Live table mapping'."
   },
   "pre_existing_components": "None. Code written after the build window opened (2026-10-22 00:00 UTC). Zetaris getting-started docs and Meterless engine docs were used as references only.",
   "license": "Apache-2.0"

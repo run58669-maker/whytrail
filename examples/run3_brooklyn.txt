@@ -47,5 +47,5 @@ confidence=0.1  supported=[]
 - verify:metric_b: 80,023 | re-derived 80,023 from raw rows -> ok  [evidence f_1261667de2]
 
 zetaris_queries=16 model_calls=2 cost=$0.0 world_facts=16 hmem_records=14 seconds=0.07
-trace: logs\trace-run-e0ca4c68.jsonl
-world: logs\world-run-e0ca4c68.jsonl
+trace: logs/trace-run-e0ca4c68.jsonl
+world: logs/world-run-e0ca4c68.jsonl

@@ -8,3 +8,7 @@ __pycache__/
 
 # keep example traces in logs/, ignore ad-hoc runs
 logs/trace-run-*.tmp
+
+# ad-hoc run traces are not committed; the live run cited in README is kept
+logs/*run-*.jsonl
+!logs/*run-b5402d4e.jsonl

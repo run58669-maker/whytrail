@@ -1,0 +1,125 @@
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_4c6f8c5710", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_4c6f8c5710", "rel": "measures", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "fact", "id": "f_4c6f8c5710", "kind": "schema", "value": [["2024-04-01", "Bronx", "356", "10461.19"]], "entities": ["source:NY_TAXI.taxi_daily"], "provenance": {"sql": "SELECT * FROM NY_TAXI.taxi_daily LIMIT 1", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "1e6b0c197e3f0cb5", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:01+00:00"}}
+{"op": "entity", "id": "source:NOAA_GHCN.central_park_daily", "type": "source"}
+{"op": "edge", "src": "f_b8922608a8", "rel": "derived_from", "dst": "source:NOAA_GHCN.central_park_daily"}
+{"op": "edge", "src": "f_b8922608a8", "rel": "measures", "dst": "source:NOAA_GHCN.central_park_daily"}
+{"op": "fact", "id": "f_b8922608a8", "kind": "schema", "value": [["2024-01-01", "0.8", "0.0", "8.3", "1.7"]], "entities": ["source:NOAA_GHCN.central_park_daily"], "provenance": {"sql": "SELECT * FROM NOAA_GHCN.central_park_daily LIMIT 1", "sources": ["NOAA_GHCN.central_park_daily"], "row_count": 1, "result_sha256": "b5777023a257df5c", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:01+00:00"}}
+{"op": "entity", "id": "source:REF.us_holidays", "type": "source"}
+{"op": "edge", "src": "f_c936ac621f", "rel": "derived_from", "dst": "source:REF.us_holidays"}
+{"op": "edge", "src": "f_c936ac621f", "rel": "measures", "dst": "source:REF.us_holidays"}
+{"op": "fact", "id": "f_c936ac621f", "kind": "schema", "value": [["2024-01-01", "New Year's Day"]], "entities": ["source:REF.us_holidays"], "provenance": {"sql": "SELECT * FROM REF.us_holidays LIMIT 1", "sources": ["REF.us_holidays"], "row_count": 1, "result_sha256": "f361654c32dfb9c8", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:02+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_cdc560b1ba", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_cdc560b1ba", "rel": "measures", "dst": "metric:taxi_trips"}
+{"op": "fact", "id": "f_cdc560b1ba", "kind": "segments", "value": [["Queens"], ["EWR"], ["Brooklyn"], ["Staten Island"], ["Manhattan"], ["Bronx"]], "entities": ["metric:taxi_trips"], "provenance": {"sql": "SELECT DISTINCT borough FROM NY_TAXI.taxi_daily", "sources": ["NY_TAXI.taxi_daily"], "row_count": 6, "result_sha256": "bf0338f4a9698f07", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:02+00:00"}}
+{"op": "entity", "id": "metric:taxi_trips", "type": "metric"}
+{"op": "entity", "id": "segment:Manhattan", "type": "segment"}
+{"op": "entity", "id": "period:2025-01-13..2025-01-19", "type": "period"}
+{"op": "entity", "id": "period:2025-01-20..2025-01-26", "type": "period"}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_f4317f87b6", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_f4317f87b6", "rel": "measures", "dst": "metric:taxi_trips"}
+{"op": "edge", "src": "f_f4317f87b6", "rel": "measures", "dst": "segment:Manhattan"}
+{"op": "edge", "src": "f_f4317f87b6", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_f4317f87b6", "kind": "metric", "value": 758672.0, "entities": ["metric:taxi_trips", "segment:Manhattan", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT SUM(trips) AS trips FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "9025385955f2aee2", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:02+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_1af1bae764", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_1af1bae764", "rel": "measures", "dst": "metric:taxi_trips"}
+{"op": "edge", "src": "f_1af1bae764", "rel": "measures", "dst": "segment:Manhattan"}
+{"op": "edge", "src": "f_1af1bae764", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_1af1bae764", "kind": "metric", "value": 747921.0, "entities": ["metric:taxi_trips", "segment:Manhattan", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT SUM(trips) AS trips FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "1bc0bb6bd3fe3fd9", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:03+00:00"}}
+{"op": "entity", "id": "hyp:H_holiday", "type": "hypothesis", "claim": "A public holiday inside period B lowered trips"}
+{"op": "entity", "id": "source:REF.us_holidays", "type": "source"}
+{"op": "edge", "src": "f_b668b44f81", "rel": "derived_from", "dst": "source:REF.us_holidays"}
+{"op": "edge", "src": "f_b668b44f81", "rel": "measures", "dst": "hyp:H_holiday"}
+{"op": "edge", "src": "f_b668b44f81", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_b668b44f81", "kind": "holiday", "value": 0.0, "entities": ["hyp:H_holiday", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT COUNT(*) AS holidays FROM REF.us_holidays WHERE holiday_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["REF.us_holidays"], "row_count": 1, "result_sha256": "aa6885079e7ed8ca", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:11+00:00"}}
+{"op": "entity", "id": "source:REF.us_holidays", "type": "source"}
+{"op": "edge", "src": "f_75f1825a48", "rel": "derived_from", "dst": "source:REF.us_holidays"}
+{"op": "edge", "src": "f_75f1825a48", "rel": "measures", "dst": "hyp:H_holiday"}
+{"op": "edge", "src": "f_75f1825a48", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_75f1825a48", "kind": "holiday", "value": 1.0, "entities": ["hyp:H_holiday", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT COUNT(*) AS holidays FROM REF.us_holidays WHERE holiday_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["REF.us_holidays"], "row_count": 1, "result_sha256": "e28610836ab702cd", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:11+00:00"}}
+{"op": "edge", "src": "f_b668b44f81", "rel": "supports", "dst": "hyp:H_holiday"}
+{"op": "edge", "src": "f_75f1825a48", "rel": "supports", "dst": "hyp:H_holiday"}
+{"op": "entity", "id": "hyp:H_weather", "type": "hypothesis", "claim": "Snow or heavy precipitation in period B suppressed taxi demand"}
+{"op": "entity", "id": "source:NOAA_GHCN.central_park_daily", "type": "source"}
+{"op": "edge", "src": "f_60fc69bd8d", "rel": "derived_from", "dst": "source:NOAA_GHCN.central_park_daily"}
+{"op": "edge", "src": "f_60fc69bd8d", "rel": "measures", "dst": "hyp:H_weather"}
+{"op": "edge", "src": "f_60fc69bd8d", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_60fc69bd8d", "kind": "weather", "value": {"prcp_mm": 8.899999999999999, "snow_mm": 41.0}, "entities": ["hyp:H_weather", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT SUM(prcp_mm) AS prcp_mm, SUM(snow_mm) AS snow_mm FROM NOAA_GHCN.central_park_daily WHERE obs_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["NOAA_GHCN.central_park_daily"], "row_count": 1, "result_sha256": "63655603de05b3cf", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:12+00:00"}}
+{"op": "entity", "id": "source:NOAA_GHCN.central_park_daily", "type": "source"}
+{"op": "edge", "src": "f_4858832554", "rel": "derived_from", "dst": "source:NOAA_GHCN.central_park_daily"}
+{"op": "edge", "src": "f_4858832554", "rel": "measures", "dst": "hyp:H_weather"}
+{"op": "edge", "src": "f_4858832554", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_4858832554", "kind": "weather", "value": {"prcp_mm": 0.0, "snow_mm": 0.0}, "entities": ["hyp:H_weather", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT SUM(prcp_mm) AS prcp_mm, SUM(snow_mm) AS snow_mm FROM NOAA_GHCN.central_park_daily WHERE obs_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["NOAA_GHCN.central_park_daily"], "row_count": 1, "result_sha256": "a0a0468576635382", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:12+00:00"}}
+{"op": "edge", "src": "f_60fc69bd8d", "rel": "refutes", "dst": "hyp:H_weather"}
+{"op": "edge", "src": "f_4858832554", "rel": "refutes", "dst": "hyp:H_weather"}
+{"op": "entity", "id": "hyp:H_data_gap", "type": "hypothesis", "claim": "Missing days in the data, not real demand, explain the drop"}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_9457ecdef0", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_9457ecdef0", "rel": "measures", "dst": "hyp:H_data_gap"}
+{"op": "edge", "src": "f_9457ecdef0", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_9457ecdef0", "kind": "coverage", "value": 7.0, "entities": ["hyp:H_data_gap", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT COUNT(DISTINCT trip_date) AS days FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "9e0edf6af4d1e362", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:12+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_34ab0fd871", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_34ab0fd871", "rel": "measures", "dst": "hyp:H_data_gap"}
+{"op": "edge", "src": "f_34ab0fd871", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_34ab0fd871", "kind": "coverage", "value": 7.0, "entities": ["hyp:H_data_gap", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT COUNT(DISTINCT trip_date) AS days FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "9e0edf6af4d1e362", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:13+00:00"}}
+{"op": "edge", "src": "f_9457ecdef0", "rel": "refutes", "dst": "hyp:H_data_gap"}
+{"op": "edge", "src": "f_34ab0fd871", "rel": "refutes", "dst": "hyp:H_data_gap"}
+{"op": "entity", "id": "hyp:H_price", "type": "hypothesis", "claim": "A higher fare per trip in period B priced riders out"}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_a9d5a89340", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_a9d5a89340", "rel": "measures", "dst": "hyp:H_price"}
+{"op": "edge", "src": "f_a9d5a89340", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_a9d5a89340", "kind": "price", "value": 13.871593666301116, "entities": ["hyp:H_price", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT SUM(fare_total_usd) / SUM(trips) AS fare_per_trip FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "e86b68888f886569", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:13+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_e4dd8bb6be", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_e4dd8bb6be", "rel": "measures", "dst": "hyp:H_price"}
+{"op": "edge", "src": "f_e4dd8bb6be", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_e4dd8bb6be", "kind": "price", "value": 13.719718499681116, "entities": ["hyp:H_price", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT SUM(fare_total_usd) / SUM(trips) AS fare_per_trip FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "23fa6434a3cbe067", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:13+00:00"}}
+{"op": "edge", "src": "f_a9d5a89340", "rel": "refutes", "dst": "hyp:H_price"}
+{"op": "edge", "src": "f_e4dd8bb6be", "rel": "refutes", "dst": "hyp:H_price"}
+{"op": "entity", "id": "hyp:H_local", "type": "hypothesis", "claim": "A segment-specific event, not a citywide one, caused the change"}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_ef7be50d2f", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_ef7be50d2f", "rel": "measures", "dst": "hyp:H_local"}
+{"op": "edge", "src": "f_ef7be50d2f", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_ef7be50d2f", "kind": "peers", "value": 84443.0, "entities": ["hyp:H_local", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT SUM(trips) AS trips FROM NY_TAXI.taxi_daily WHERE borough <> 'Manhattan' AND trip_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "bb31a9083d19ce54", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:13+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_52495cef71", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_52495cef71", "rel": "measures", "dst": "hyp:H_local"}
+{"op": "edge", "src": "f_52495cef71", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_52495cef71", "kind": "peers", "value": 91643.0, "entities": ["hyp:H_local", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT SUM(trips) AS trips FROM NY_TAXI.taxi_daily WHERE borough <> 'Manhattan' AND trip_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 1, "result_sha256": "cfb6b6316bb1828b", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:14+00:00"}}
+{"op": "edge", "src": "f_ef7be50d2f", "rel": "refutes", "dst": "hyp:H_local"}
+{"op": "edge", "src": "f_52495cef71", "rel": "refutes", "dst": "hyp:H_local"}
+{"op": "entity", "id": "source:NOAA_GHCN.central_park_daily", "type": "source"}
+{"op": "edge", "src": "f_8a80fc0589", "rel": "derived_from", "dst": "source:NOAA_GHCN.central_park_daily"}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_8a80fc0589", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "entity", "id": "source:REF.us_holidays", "type": "source"}
+{"op": "edge", "src": "f_8a80fc0589", "rel": "derived_from", "dst": "source:REF.us_holidays"}
+{"op": "edge", "src": "f_8a80fc0589", "rel": "measures", "dst": "segment:Manhattan"}
+{"op": "edge", "src": "f_8a80fc0589", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_8a80fc0589", "kind": "daily", "value": [["2025-01-13", "88147", "0.0", "0.0", null], ["2025-01-14", "110442", "0.0", "0.0", null], ["2025-01-15", "113679", "0.0", "0.0", null], ["2025-01-16", "126181", "0.0", "0.0", null], ["2025-01-17", "107765", "0.0", "0.0", null], ["2025-01-18", "108252", "2.3", "0.0", null], ["2025-01-19", "104206", "6.6", "41.0", null]], "entities": ["segment:Manhattan", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT t.trip_date, t.trips, w.prcp_mm, w.snow_mm, h.name AS holiday FROM NY_TAXI.taxi_daily t JOIN NOAA_GHCN.central_park_daily w ON t.trip_date = w.obs_date LEFT JOIN REF.us_holidays h ON t.trip_date = h.holiday_date WHERE t.borough = 'Manhattan' AND t.trip_date BETWEEN '2025-01-13' AND '2025-01-19' ORDER BY t.trip_date", "sources": ["NOAA_GHCN.central_park_daily", "NY_TAXI.taxi_daily", "REF.us_holidays"], "row_count": 7, "result_sha256": "9e11217ba515a5e4", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:23+00:00"}}
+{"op": "entity", "id": "source:NOAA_GHCN.central_park_daily", "type": "source"}
+{"op": "edge", "src": "f_e74b3e1850", "rel": "derived_from", "dst": "source:NOAA_GHCN.central_park_daily"}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_e74b3e1850", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "entity", "id": "source:REF.us_holidays", "type": "source"}
+{"op": "edge", "src": "f_e74b3e1850", "rel": "derived_from", "dst": "source:REF.us_holidays"}
+{"op": "edge", "src": "f_e74b3e1850", "rel": "measures", "dst": "segment:Manhattan"}
+{"op": "edge", "src": "f_e74b3e1850", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_e74b3e1850", "kind": "daily", "value": [["2025-01-20", "71364", "0.0", "0.0", "Martin Luther King Jr. Day"], ["2025-01-21", "103459", "0.0", "0.0", null], ["2025-01-22", "115284", "0.0", "0.0", null], ["2025-01-23", "125849", "0.0", "0.0", null], ["2025-01-24", "116734", "0.0", "0.0", null], ["2025-01-25", "126333", "0.0", "0.0", null], ["2025-01-26", "88898", "0.0", "0.0", null]], "entities": ["segment:Manhattan", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT t.trip_date, t.trips, w.prcp_mm, w.snow_mm, h.name AS holiday FROM NY_TAXI.taxi_daily t JOIN NOAA_GHCN.central_park_daily w ON t.trip_date = w.obs_date LEFT JOIN REF.us_holidays h ON t.trip_date = h.holiday_date WHERE t.borough = 'Manhattan' AND t.trip_date BETWEEN '2025-01-20' AND '2025-01-26' ORDER BY t.trip_date", "sources": ["NOAA_GHCN.central_park_daily", "NY_TAXI.taxi_daily", "REF.us_holidays"], "row_count": 7, "result_sha256": "f7355631b7de2c7a", "channel": "zetaris-rest", "agent": "Retriever", "at": "2026-10-22T11:58:23+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_0203d716c5", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_0203d716c5", "rel": "measures", "dst": "segment:Manhattan"}
+{"op": "edge", "src": "f_0203d716c5", "rel": "measures", "dst": "period:2025-01-13..2025-01-19"}
+{"op": "fact", "id": "f_0203d716c5", "kind": "verify", "value": [["2025-01-13", "88147"], ["2025-01-14", "110442"], ["2025-01-15", "113679"], ["2025-01-16", "126181"], ["2025-01-17", "107765"], ["2025-01-18", "108252"], ["2025-01-19", "104206"]], "entities": ["segment:Manhattan", "period:2025-01-13..2025-01-19"], "provenance": {"sql": "SELECT trip_date, trips FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-13' AND '2025-01-19'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 7, "result_sha256": "d39a6f74135fe7ff", "channel": "zetaris-rest", "agent": "Verifier", "at": "2026-10-22T11:58:23+00:00"}}
+{"op": "entity", "id": "source:NY_TAXI.taxi_daily", "type": "source"}
+{"op": "edge", "src": "f_cf3eb3b025", "rel": "derived_from", "dst": "source:NY_TAXI.taxi_daily"}
+{"op": "edge", "src": "f_cf3eb3b025", "rel": "measures", "dst": "segment:Manhattan"}
+{"op": "edge", "src": "f_cf3eb3b025", "rel": "measures", "dst": "period:2025-01-20..2025-01-26"}
+{"op": "fact", "id": "f_cf3eb3b025", "kind": "verify", "value": [["2025-01-20", "71364"], ["2025-01-21", "103459"], ["2025-01-22", "115284"], ["2025-01-23", "125849"], ["2025-01-24", "116734"], ["2025-01-25", "126333"], ["2025-01-26", "88898"]], "entities": ["segment:Manhattan", "period:2025-01-20..2025-01-26"], "provenance": {"sql": "SELECT trip_date, trips FROM NY_TAXI.taxi_daily WHERE borough = 'Manhattan' AND trip_date BETWEEN '2025-01-20' AND '2025-01-26'", "sources": ["NY_TAXI.taxi_daily"], "row_count": 7, "result_sha256": "f669bbe31dcd6714", "channel": "zetaris-rest", "agent": "Verifier", "at": "2026-10-22T11:58:24+00:00"}}

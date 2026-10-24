@@ -64,8 +64,8 @@ confidence=0.95  supported=['H_holiday']
 - verify:metric_b: 747,921 | re-derived 747,921 from raw rows -> ok  [evidence f_cf3eb3b025]
 
 zetaris_queries=20 model_calls=3 cost=$0.0565 world_facts=20 hmem_records=7 seconds=34.28
-trace: logs\trace-run-b5402d4e.jsonl
-world: logs\world-run-b5402d4e.jsonl
+trace: logs/trace-run-b5402d4e.jsonl
+world: logs/world-run-b5402d4e.jsonl
 
 --- same instance, question outside the data range (warm memory, no model calls) ---
 $ python -m whytrail --quiet "Why did Manhattan taxi trips drop in the week of 2024-01-15 compared with the week of 2024-01-08?"

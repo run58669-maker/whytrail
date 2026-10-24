@@ -200,3 +200,24 @@ def test_cli_default_question_by_mode():
     assert default_question(False) == DEFAULT_Q
     assert "2024-01-15" in DEFAULT_SAMPLE_Q
     assert "2025-01-20" in DEFAULT_Q
+
+
+def test_cli_mock_data_default_question_in_mock_range(tmp_path, monkeypatch, capsys):
+    # --mock-data without a question: default must land inside the synthetic 2024-01 range, no model call.
+    from whytrail import __main__ as cli
+    seen = {}
+    real_build = cli.build
+
+    def fake_build(mock_data, mock_llm, memory, log_dir, echo=True, max_cost=1.0):
+        seen["mock_data"], seen["mock_llm"] = mock_data, mock_llm
+        return real_build(mock_data, True, memory, log_dir, echo=echo, max_cost=max_cost)  # force offline generator
+
+    monkeypatch.setattr(cli, "build", fake_build)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("SAMPLE_MODE", raising=False)
+    rc = cli.main(["--mock-data", "--quiet", "--memory", str(tmp_path / "hmem.json"), "--log-dir", str(tmp_path / "logs")])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert seen == {"mock_data": True, "mock_llm": False}
+    assert "2024-01-15..2024-01-21" in out and "NoDataError" not in out
+    assert default_question(False or True) == DEFAULT_SAMPLE_Q

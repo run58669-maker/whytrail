@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
 
     sample = a.mock or os.environ.get("SAMPLE_MODE", "").lower() == "true"
-    question = a.question or default_question(sample)
+    question = a.question or default_question(sample or a.mock_data)
     if a.reset_memory and os.path.exists(a.memory):
         os.remove(a.memory)
     wt = build(sample or a.mock_data, sample, a.memory, a.log_dir, echo=not a.quiet, max_cost=a.max_cost)

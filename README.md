@@ -177,17 +177,16 @@ direction (Brooklyn, rise), a live-Claude run on sample data, and a live Zetaris
 ## Status
 
 Done: orchestrator, five agents, Zetaris REST client + mock, World Model, H-MEM, injected generator (Claude + mock),
-CLI, `POST /run`, JSONL traces, live Zetaris instance, live table mapping, NoDataError handling, 17 unit tests,
+CLI, `POST /run`, JSONL traces, live Zetaris instance, live table mapping, NoDataError handling, 18 unit tests,
 live Claude run on sample data.
+- Live end-to-end run on local Zetaris (Docker) + Claude — see logs/trace-run-b5402d4e.jsonl
 
 Next: web UI, NVIDIA Nemotron for the Skeptic, Docker image test, demo video, slide deck.
 
 ## How we built it
 
-- **Cursor** is the development environment. Cursor Agent (CLI, `agent -p`) made the commits tagged `[cursor]` from
-  this point on, using [`.cursor/rules/whytrail.mdc`](.cursor/rules/whytrail.mdc). The skeleton commit and commit
-  a7c2a96 were written with Claude Code from the terminal (a7c2a96 is tagged `[cursor]` but its message says it was
-  not made by Cursor); later `[cursor]` commits were made by Cursor Agent.
+- **Cursor** is the development environment ([`.cursor/rules/whytrail.mdc`](.cursor/rules/whytrail.mdc)); commits tagged
+  `[cursor]` were made by Cursor Agent, except the skeleton commit and a7c2a96, which Claude Code wrote from the terminal.
 - Zetaris integration follows `zetaris/getting-started` (`docs/connections/client-setup.md`, `scripts/zetaris_sql.py`);
   Meterless engines follow the Meterless README and the World Model / H-MEM engine documents.
 
